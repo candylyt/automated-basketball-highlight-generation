@@ -1,0 +1,57 @@
+.VU-uploadContainer {
+  border-radius: 40px;
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+  width: 70vw;
+  height: 56vh;
+  padding: 46px;
+  position: relative;
+}
+
+.VU-uploadBox {
+  border-radius: 20px;
+  border-style: dashed;
+  width: 100%;
+  height: 100%;
+  border-color: rgb(187, 186, 186);
+  display: flex;
+  flex-direction: column;
+  justify-items: center;
+  align-items: center;
+  justify-content: center;
+}
+
+.VU-uploadButton {
+  width: 30vw;
+  height: 100px;
+  background-color: #3ad1f2;
+  border-radius: 20px;
+  font-size: calc(20px + 2vmin);
+  display: flex;
+  text-align: center;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+.VU-alternative {
+  margin-top: 20px;
+  font-size: calc(10px + 2vmin);
+  font-weight: 600;
+}
+
+.VU-videoEditIcon {
+  position: absolute;
+  top: -60px;
+  right: -40px;
+  z-index: 10;
+}
+
+.VU-squiggleIcon {
+  position: absolute;
+  bottom: 10px;
+  left: -100px;
+}
+
+.VU-videoUploadIcon {
+  margin-right: 30px;
+}
