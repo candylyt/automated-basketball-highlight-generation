@@ -1,0 +1,30 @@
+.Home {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.Home-header {
+  min-height: 15vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(40px + 2vmin);
+  color: black;
+  font-weight: bold;
+}
+
+.Home-description {
+  min-height: 10vh;
+  min-width: 10vw;
+  max-width: 65vw;
+  font-size: calc(15px + 2vmin);
+  color: black;
+  font-weight: medium;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 50px;
+}
