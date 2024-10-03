@@ -1,0 +1,60 @@
+.VD-background h1 {
+  font-size: calc(30px + 2vmin);
+  margin-left: 3vw;
+}
+
+.VD-background {
+  display: flex;
+  flex-direction: column;
+  margin-top: 10px;
+}
+
+.VD-videoContainer {
+  display: flex;
+  justify-content: center;
+  width: 65vw;
+  height: 65vh;
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+  margin-left: 3vw;
+}
+
+.VD-videoContainer video {
+  display: flex;
+  align-self: center;
+  max-width: 90%;
+  max-height: 90%;
+  width: auto;
+  height: auto;
+}
+
+.VD-container {
+  display: flex;
+  flex-direction: row;
+  margin-top: 3vh;
+}
+
+.VD-statistics {
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+  width: 20vw;
+  height: 65vh;
+  margin-left: 3vw;
+  display: flex;
+  flex-direction: column;
+  padding-top: 0.5%;
+}
+
+.VD-statistics h2 {
+  font-size: calc(15px + 2vmin);
+  font-weight: 600;
+  margin-top: 11px;
+  margin-left: 15px;
+  margin-bottom: 1px;
+}
+
+.VD-division {
+  width: 45%;
+  height: 1px;
+  background-color: black;
+  border: 1px solid black;
+  margin-left: 15px;
+}

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { ReactComponent as VideoEditIcon } from "../assets/videoEditIcon.svg";
 import { ReactComponent as SquiggleIcon } from "../assets/squiggleIcon.svg";
 import { ReactComponent as VideoUploadIcon } from "../assets/videoUploadIcon.svg";
@@ -7,8 +7,7 @@ import "./VideoUpload.css";
 
 const fileTypes = ["MP4", "MOV"];
 
-function VideoUpload() {
-  const [file, setFile] = useState(null);
+function VideoUpload({ setFile }) {
   const handleChange = (file) => {
     setFile(file);
   };
