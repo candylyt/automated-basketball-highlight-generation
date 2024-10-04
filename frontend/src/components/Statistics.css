@@ -1,0 +1,105 @@
+.statistics {
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+  width: 20vw;
+  height: 75vh;
+  margin-left: 3vw;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.statistics h2 {
+  font-size: calc(15px + 2vmin);
+  font-weight: 600;
+  margin-top: 11px;
+  margin-left: 15px;
+  margin-bottom: 1px;
+}
+
+.division {
+  width: 45%;
+  height: 1px;
+  background-color: black;
+  border: 1px solid black;
+  margin-left: 15px;
+  margin-bottom: 20px;
+}
+
+.statisticsItem {
+  display: flex;
+  flex-direction: column;
+  margin-left: 15px;
+}
+
+.statisticsItemTitle {
+  font-weight: 500;
+  font-size: calc(10px + 2vmin);
+  margin-bottom: 10px;
+}
+
+.statisticsItemValue {
+  display: flex;
+  flex-direction: row;
+  font-size: calc(10px + 2vmin);
+  justify-content: center;
+}
+
+.verticalDivider {
+  width: 3px;
+  height: cal(10px + 2vmin);
+  background-color: #e0e0e0;
+  margin-left: 2vw;
+  margin-right: 1.5vw;
+}
+
+.shootingPercentage {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.number {
+  font-size: calc(20px + 3vmin);
+}
+
+.percentage {
+  font-size: calc(10px + 2vmin);
+  margin-left: 5px;
+}
+
+.totalShots {
+  font-size: calc(5px + 2vmin);
+  display: flex;
+  flex-direction: row;
+}
+
+.shotNumber {
+  font-weight: 600;
+}
+
+.shotAttempts {
+  font-size: calc(1px + 2vmin);
+  color: grey;
+}
+
+.detailedShots {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.export {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  position: absolute;
+  bottom: 5%;
+  margin-left: 35%;
+  font-size: calc(10px + 2vmin);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.exportIcon {
+  margin-left: 10px;
+}

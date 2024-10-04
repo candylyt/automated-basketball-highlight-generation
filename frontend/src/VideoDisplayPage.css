@@ -1,0 +1,75 @@
+.VD-background {
+  display: flex;
+  flex-direction: column;
+  margin-top: 10px;
+}
+
+.VD-videoContainer {
+  display: flex;
+  flex-direction: column;
+  width: 65vw;
+  height: 75vh;
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+  margin-left: 3vw;
+}
+
+.VD-videoContainer video {
+  display: flex;
+  align-self: center;
+  width: 90%;
+  height: 75%;
+  margin-top: 5%;
+}
+
+.VD-container {
+  display: flex;
+  flex-direction: row;
+  margin-top: 3vh;
+}
+
+.VD-timestampTitle {
+  font-weight: 600;
+  font-size: calc(10px + 2vmin);
+  margin-left: 5%;
+  margin-top: 1%;
+  margin-bottom: 1%;
+}
+
+.VD-timestampsContainer {
+  display: flex;
+  flex-direction: row;
+  margin-left: 5%;
+}
+
+.VD-timestamp {
+  width: 5vw;
+  height: 4vh;
+  background-color: green;
+  color: white;
+  border-radius: 10px;
+  margin-right: 3%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.VD-timestamp:hover {
+  background-color: #c2bbbb;
+}
+
+.VD-error {
+  font-size: calc(30px + 2vmin);
+  font-weight: 600;
+  color: red;
+  display: flex;
+  align-self: center;
+  margin-top: 35vh;
+  color: #721c24;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  padding: 10px;
+  border-radius: 5px;
+  text-align: center;
+}
