@@ -5,7 +5,7 @@ import { ReactComponent as VideoUploadIcon } from "../assets/videoUploadIcon.svg
 import { FileUploader } from "react-drag-drop-files";
 import "./VideoUpload.css";
 
-const fileTypes = ["MP4", "MOV"];
+const fileTypes = ["MP4"];
 
 function VideoUpload({ setFile }) {
   const handleChange = (file) => {
