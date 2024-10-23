@@ -1,0 +1,4 @@
+WEIGHTS_PATH: 'weights/best.pt'
+MODEL_CLASSES: ['ball', 'made', 'person', 'rim', 'shoot']
+INPUT: 'videos/Golden State Warriors vs Los Angeles Lakers Full Game Highlights  April 9 2024  FreeDawkins.mp4'
+
