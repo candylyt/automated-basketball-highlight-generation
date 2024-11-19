@@ -83,8 +83,8 @@ def detect_down(ball_pos, hoop_pos):
 # self.frame_count: int
 
 def detect_up(ball_pos, hoop_pos):
-    x1 = hoop_pos[-1][0][0] - 4 * hoop_pos[-1][2]
-    x2 = hoop_pos[-1][0][0] + 4 * hoop_pos[-1][2]
+    x1 = hoop_pos[-1][0][0] - 2 * hoop_pos[-1][2]
+    x2 = hoop_pos[-1][0][0] + 2  * hoop_pos[-1][2]
     y1 = hoop_pos[-1][0][1] - 2 * hoop_pos[-1][3]
     y2 = hoop_pos[-1][0][1]
 

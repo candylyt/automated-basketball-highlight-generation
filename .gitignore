@@ -1,2 +1,3 @@
 backend/score-detection/__pycache__
 backend/score-detection/videos/*
+backend/score-detection/output/*
