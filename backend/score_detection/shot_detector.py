@@ -13,17 +13,20 @@ import yaml
 env = yaml.load(open('config.yaml', 'r'), Loader=yaml.SafeLoader)
 print(env)
 
-p = Popen(['ffmpeg', '-y', '-f', 'image2pipe', '-vcodec', 'mjpeg', '-r', '24', '-i', '-', '-vcodec', 'h264', '-qscale', '5', '-r', '24', env['output_path'] + '/' + env['input'].split("/")[-1]], stdin=PIPE)
+# p = Popen(['ffmpeg', '-y', '-f', 'image2pipe', '-vcodec', 'mjpeg', '-r', '24', '-i', '-', '-vcodec', 'h264', '-qscale', '5', '-r', '24', env['output_path'] + '/' + env['input'].split("/")[-1]], stdin=PIPE)
 
 class ShotDetector:
-    def __init__(self):
+    def __init__(self, video_path, on_detect, on_complete, show_vid=False):
         # Load the YOLO model created from main.py - change text to your relative path
-        self.model = YOLO(env['weights_path'])
+        self.model = YOLO(env['weights_path'], verbose=False)
         self.class_names = env['classes']
         self.colors = [(0, 255, 0), (255, 255, 0), (255, 255, 255), (255, 0, 0), (0, 0, 255)]
+        self.detect_callback = on_detect
+        self.on_complete = on_complete
+        self.show_vid = show_vid
 
         # Use video - replace text with your video path
-        self.cap = cv2.VideoCapture(env['input'])
+        self.cap = cv2.VideoCapture(video_path)
         self.frame_rate = self.cap.get(cv2.CAP_PROP_FPS)
 
         print(f"FPS: {self.frame_rate}")
@@ -58,6 +61,7 @@ class ShotDetector:
         self.save = env['save_video']
 
         self.attempt_cooldown = 0
+        self.timestamp = None
 
         # if self.save:
         #     output_name = env['output_path'] + '/' + env['input'].split("/")[-1]
@@ -68,6 +72,10 @@ class ShotDetector:
         
         while True:
             ret, self.frame = self.cap.read()
+            if not ret:
+                self.on_complete(self.attempts, self.makes)
+
+            self.timestamp = self.cap.get(cv2.CAP_PROP_POS_MSEC)
 
             
             # resize to match 
@@ -78,7 +86,7 @@ class ShotDetector:
                 # End of the video or an error occurred
                 break
 
-            results = self.model(det_frame, stream=True, verbose=True, imgsz=1280)
+            results = self.model(det_frame, stream=True, verbose=False, imgsz=1280)
 
             for r in results:
 
@@ -143,45 +151,46 @@ class ShotDetector:
             if self.attempt_cooldown > 0:
                 self.attempt_cooldown -= 1
 
-            if self.hoop_pos:
-                # draw up-region
-                x1 = self.hoop_pos[-1][0][0] - 2 * self.hoop_pos[-1][2]
-                x2 = self.hoop_pos[-1][0][0] + 2 * self.hoop_pos[-1][2]
-                y1 = self.hoop_pos[-1][0][1] - 2 * self.hoop_pos[-1][3]
-                y2 = self.hoop_pos[-1][0][1]
+            if self.show_vid:
+                if self.hoop_pos:
+                    # draw up-region
+                    x1 = self.hoop_pos[-1][0][0] - 2 * self.hoop_pos[-1][2]
+                    x2 = self.hoop_pos[-1][0][0] + 2 * self.hoop_pos[-1][2]
+                    y1 = self.hoop_pos[-1][0][1] - 2 * self.hoop_pos[-1][3]
+                    y2 = self.hoop_pos[-1][0][1]
 
-                pts = np.array([[x1, y1], [x2,y1], [x2, y2], [x1, y2]], np.int32)
- 
-                pts = pts.reshape((-1, 1, 2))
+                    pts = np.array([[x1, y1], [x2,y1], [x2, y2], [x1, y2]], np.int32)
+    
+                    pts = pts.reshape((-1, 1, 2))
 
-                self.frame = cv2.polylines(self.frame, [pts], True, (0, 255, 0), 3)
+                    self.frame = cv2.polylines(self.frame, [pts], True, (0, 255, 0), 3)
 
-                # draw hoop-region
-                x1 = self.hoop_pos[-1][0][0] - 0.7 * self.hoop_pos[-1][2]
-                x2 = self.hoop_pos[-1][0][0] + 0.7 * self.hoop_pos[-1][2]
-                y1 = self.hoop_pos[-1][0][1] - 1.5 * self.hoop_pos[-1][3]
-                y2 = self.hoop_pos[-1][0][1] + 0.2 * self.hoop_pos[-1][3]
+                    # draw hoop-region
+                    x1 = self.hoop_pos[-1][0][0] - 0.7 * self.hoop_pos[-1][2]
+                    x2 = self.hoop_pos[-1][0][0] + 0.7 * self.hoop_pos[-1][2]
+                    y1 = self.hoop_pos[-1][0][1] - 1.5 * self.hoop_pos[-1][3]
+                    y2 = self.hoop_pos[-1][0][1] + 0.2 * self.hoop_pos[-1][3]
 
-                pts = np.array([[x1, y1], [x2,y1], [x2, y2], [x1, y2]], np.int32)
- 
-                pts = pts.reshape((-1, 1, 2))
+                    pts = np.array([[x1, y1], [x2,y1], [x2, y2], [x1, y2]], np.int32)
+    
+                    pts = pts.reshape((-1, 1, 2))
 
-                self.frame = cv2.polylines(self.frame, [pts], True, (255, 0, 255), 3)
+                    self.frame = cv2.polylines(self.frame, [pts], True, (255, 0, 255), 3)
 
-                # # draw down-region
-                hoop_x1 = self.hoop_pos[-1][0][0] - 0.5 * self.hoop_pos[-1][2]
-                hoop_x2 = self.hoop_pos[-1][0][0] + 0.5 * self.hoop_pos[-1][2]
-                hoop_y = self.hoop_pos[-1][0][1] + 0.5 * self.hoop_pos[-1][3]
-                y_range = 2 * self.hoop_pos[-1][3]
-                alpha = 0.3
+                    # # draw down-region
+                    hoop_x1 = self.hoop_pos[-1][0][0] - 0.5 * self.hoop_pos[-1][2]
+                    hoop_x2 = self.hoop_pos[-1][0][0] + 0.5 * self.hoop_pos[-1][2]
+                    hoop_y = self.hoop_pos[-1][0][1] + 0.5 * self.hoop_pos[-1][3]
+                    y_range = 2 * self.hoop_pos[-1][3]
+                    alpha = 0.3
 
-                x1 = hoop_x1 - y_range* alpha
-                x4 = hoop_x2 + y_range * alpha
+                    x1 = hoop_x1 - y_range* alpha
+                    x4 = hoop_x2 + y_range * alpha
 
-                pts = np.array([[x1, hoop_y + y_range], [hoop_x1, hoop_y], [hoop_x2, hoop_y], [x4, hoop_y + y_range]], np.int32)
-                pts = pts.reshape((-1, 1, 2))
+                    pts = np.array([[x1, hoop_y + y_range], [hoop_x1, hoop_y], [hoop_x2, hoop_y], [x4, hoop_y + y_range]], np.int32)
+                    pts = pts.reshape((-1, 1, 2))
 
-                self.frame = cv2.polylines(self.frame, [pts], True, (0, 0, 255), 3)
+                    self.frame = cv2.polylines(self.frame, [pts], True, (0, 0, 255), 3)
 
             # if self.screen_shot:
             #     cv2.imwrite(f"{screenshot_path}/{self.screen_shot_count}.png", self.frame)
@@ -189,7 +198,8 @@ class ShotDetector:
             #     self.screen_shot_count += 1
 
 
-            cv2.imshow('Frame', self.frame)
+                    cv2.imshow('Frame', self.frame)
+                    
             if self.save:
                 im = Image.fromarray(cv2.cvtColor(cv2.resize(self.frame, (env['output_width'], env['output_height'])), cv2.COLOR_BGR2RGB))
                 im.save(p.stdin, 'JPEG')
@@ -255,12 +265,14 @@ class ShotDetector:
                         self.overlay_color = (0, 255, 0)
                         self.fade_counter = self.fade_frames
                         self.attempt_cooldown = 100
+                        self.detect_callback(max(0, self.timestamp-3000), self.timestamp+2000, True)
                 else:
                     self.up_frame = None
                     self.attempts += 1
                     self.down = False
                     self.up = False
                     self.attempt_cooldown = 100
+                    self.detect_callback(max(0, self.timestamp-5000), self.timestamp+3000, False)
                     # self.attempts += 1
                     # self.overlay_color = (0, 0, 255)
                         # self.fade_counter = self.fade_frames
@@ -307,6 +319,6 @@ class ShotDetector:
             self.fade_counter -= 1
 
 
-if __name__ == "__main__":
-    ShotDetector()
+# if __name__ == "__main__":
+#     ShotDetector()
 
