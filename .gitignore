@@ -1,0 +1,4 @@
+backend/score_detection/__pycache__
+backend/score_detection/videos/*
+backend/score_detection/output/*
+backend/score_detection/uploads/*
