@@ -28,7 +28,7 @@ def process_video(video_path):
             'makes' : makes
         })
 
-    ShotDetector(video_path, on_detection, on_complete)
+    ShotDetector(video_path, on_detection, on_complete, show_vid=True)
 
 @app.route('/upload' , methods=['POST'])
 def upload_video():

@@ -191,6 +191,7 @@ class ShotDetector:
                     pts = pts.reshape((-1, 1, 2))
 
                     self.frame = cv2.polylines(self.frame, [pts], True, (0, 0, 255), 3)
+                cv2.imshow('Frame', self.frame)
 
             # if self.screen_shot:
             #     cv2.imwrite(f"{screenshot_path}/{self.screen_shot_count}.png", self.frame)
@@ -198,8 +199,7 @@ class ShotDetector:
             #     self.screen_shot_count += 1
 
 
-                    cv2.imshow('Frame', self.frame)
-                    
+
             if self.save:
                 im = Image.fromarray(cv2.cvtColor(cv2.resize(self.frame, (env['output_width'], env['output_height'])), cv2.COLOR_BGR2RGB))
                 im.save(p.stdin, 'JPEG')
