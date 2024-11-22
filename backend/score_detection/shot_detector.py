@@ -201,9 +201,9 @@ class ShotDetector:
 
 
 
-            if self.save:
-                im = Image.fromarray(cv2.cvtColor(cv2.resize(self.frame, (env['output_width'], env['output_height'])), cv2.COLOR_BGR2RGB))
-                im.save(p.stdin, 'JPEG')
+            # if self.save:
+            #     im = Image.fromarray(cv2.cvtColor(cv2.resize(self.frame, (env['output_width'], env['output_height'])), cv2.COLOR_BGR2RGB))
+            #     im.save(p.stdin, 'JPEG')
                 # self.out.write(cv2.resize(self.frame, (env['output_width'], env['output_height'])))
 
             # Close if 'q' is clicked
