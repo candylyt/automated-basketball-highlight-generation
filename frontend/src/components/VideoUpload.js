@@ -8,8 +8,26 @@ import "./VideoUpload.css";
 const fileTypes = ["MP4"];
 
 function VideoUpload({ setFile }) {
-  const handleChange = (file) => {
+  const handleChange = async (file) => {
     setFile(file);
+
+    const formData = new FormData();
+    formData.append("video", file);
+    try {
+      const response = await fetch("http://127.0.0.1:5001/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("File uploaded successfully:", data);
+      } else {
+        console.error("File upload failed:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Error uploading file:", error);
+    }
   };
 
   return (

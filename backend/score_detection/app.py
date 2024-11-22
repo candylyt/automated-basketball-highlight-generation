@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_socketio import SocketIO
 from shot_detector import ShotDetector
+from flask_cors import CORS
 import threading
 import yaml
 import os
@@ -9,7 +10,8 @@ env = yaml.load(open('config.yaml', 'r'), Loader=yaml.SafeLoader)
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = env['upload_path']
-socketio = SocketIO(app)
+socketio = SocketIO(app, cors_allowed_origins="*")
+CORS(app)
 
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
@@ -32,6 +34,7 @@ def process_video(video_path):
 
 @app.route('/upload' , methods=['POST'])
 def upload_video():
+    print('upload_video')
     file = request.files['video']
     video_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
     file.save(video_path)

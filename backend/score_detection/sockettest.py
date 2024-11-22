@@ -25,7 +25,7 @@ def test_upload_and_socket():
         sio.connect('http://127.0.0.1:5000')
         
         # Upload video
-        files = {'video': open('videos/fail1.mp4', 'rb')}
+        files = {'video': open('videos/test.mp4', 'rb')}
         response = requests.post('http://127.0.0.1:5000/upload', files=files)
         print(f"Upload response: {response.json()}")
         

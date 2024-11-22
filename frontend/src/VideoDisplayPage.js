@@ -1,5 +1,6 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation, Link } from "react-router-dom";
+import io from "socket.io-client";
 import Header from "./components/Header";
 import "./VideoDisplayPage.css";
 import Statistics from "./components/Statistics";
@@ -8,7 +9,9 @@ function VideoDisplayPage() {
   const location = useLocation();
   const { file } = location.state || {};
 
-  const timestamps = ["1:26", "3:12", "7:02"];
+  const [timestamps, setTimestamps] = useState([]);
+  const [statistics, setStatistics] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
 
   const convertTimestampToSeconds = (timestamp) => {
     const [minutes, seconds] = timestamp.split(":");
@@ -21,6 +24,64 @@ function VideoDisplayPage() {
     video.currentTime = seconds;
     video.play();
   };
+
+  const convertMillisecondsToTimestamp = (milliseconds) => {
+    const totalSeconds = Math.floor(milliseconds / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    const pad = (num) => String(num).padStart(2, '0');
+    if (hours > 0) {
+      return `${hours}:${pad(minutes)}:${pad(seconds)}`;
+    } else {
+      return `${minutes}:${pad(seconds)}`;
+    }
+  }
+
+  const socket = io("http://127.0.0.1:5001");
+
+  useEffect(() => {
+    // Connect to the WebSocket server
+    console.log("useEffect");
+
+    // Handle connection and disconnection events
+    socket.on("connect", () => {
+      console.log("Connected to WebSocket server");
+      setIsConnected(true);
+    });
+
+    socket.on("disconnect", () => {
+      console.log("Disconnected from WebSocket server");
+      setIsConnected(false);
+    });
+
+    // Listen for the 'shooting_detected' event
+    socket.on("shooting_detected", (data) => {
+      console.log("Shooting detected:", data);
+
+      if (data.success) {
+        const timestamp = convertMillisecondsToTimestamp(data.start_time);
+        setTimestamps((prevTimestamps) => {
+          if (!prevTimestamps.includes(timestamp)) {
+            return [...prevTimestamps, timestamp];
+          }
+          return prevTimestamps;
+        });
+      }
+    });
+
+    // Listen for the 'processing_complete' event
+    socket.on("processing_complete", (data) => {
+      console.log("Processing complete:", data);
+      setStatistics(data);
+    });
+
+    // Handle connection errors
+    socket.on("connect_error", (error) => {
+      console.error("Connection error:", error);
+    });
+  }, [socket]);
 
   return (
     <div className="VD-background">
@@ -46,7 +107,7 @@ function VideoDisplayPage() {
               ))}
             </div>
           </div>
-          <Statistics />
+          <Statistics data={statistics} />
         </div>
       ) : (
         <div className="VD-error">

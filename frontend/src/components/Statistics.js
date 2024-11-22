@@ -2,7 +2,42 @@ import React from "react";
 import { ReactComponent as ExportIcon } from "../assets/exportIcon.svg";
 import "./Statistics.css";
 
-function Statistics() {
+function Statistics({data}) {
+  const calculatePercentage = (numerator, denominator) => {
+    return (numerator / denominator) * 100;
+  };
+
+  if (!data) {
+    return (
+      <div className="statistics">
+        <h2>Statistics</h2>
+        <div className="division" />
+        <div className="statisticsItem">
+          <div className="statisticsItemTitle">Shooting Percentage</div>
+          <div className="statisticsItemValue">
+            <div className="shootingPercentage">
+              <div className="number">
+                -
+                <span className="percentage">%</span>
+              </div>
+            </div>
+            <div className="verticalDivider" />
+            <div className="detailedShots">
+              <div className="totalShots">
+                <div className="shotNumber">-</div>
+                <div>&nbsp;SHOTS</div>
+              </div>
+              <div className="shotAttempts">-/-</div>
+            </div>
+          </div>
+        </div>
+        <div className="export">
+          <div>Export</div>
+          <ExportIcon className="exportIcon" />
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="statistics">
       <h2>Statistics</h2>
@@ -12,16 +47,17 @@ function Statistics() {
         <div className="statisticsItemValue">
           <div className="shootingPercentage">
             <div className="number">
-              56<span className="percentage">%</span>
+              {calculatePercentage(data.makes, data.attempts).toFixed(1)}
+              <span className="percentage">%</span>
             </div>
           </div>
           <div className="verticalDivider" />
           <div className="detailedShots">
             <div className="totalShots">
-              <div className="shotNumber">18</div>
+              <div className="shotNumber">{data.makes}/{data.attempts}</div>
               <div>&nbsp;SHOTS</div>
             </div>
-            <div className="shotAttempts">10/18</div>
+            <div className="shotAttempts"></div>
           </div>
         </div>
       </div>
