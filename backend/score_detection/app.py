@@ -15,7 +15,7 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 def process_video(video_path):
     def on_detection(start_time, end_time, success):
-        print("socket emit")
+        # print("socket emit")
         socketio.emit('shooting_detected', {
             'start_time' : start_time,
             'end_time' : end_time,

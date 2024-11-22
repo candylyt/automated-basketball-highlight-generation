@@ -72,8 +72,9 @@ class ShotDetector:
         
         while True:
             ret, self.frame = self.cap.read()
+
             if not ret:
-                self.on_complete(self.attempts, self.makes)
+                break
 
             self.timestamp = self.cap.get(cv2.CAP_PROP_POS_MSEC)
 
@@ -209,10 +210,11 @@ class ShotDetector:
             if cv2.waitKey(1) & 0xFF == ord('q'):  # higher waitKey slows video down, use 1 for webcam
                 break
 
-
+        self.on_complete(self.attempts, self.makes)
         self.cap.release()
-        self.out.release()
         cv2.destroyAllWindows()
+        print("done")
+        
 
     def clean_motion(self):
         # Clean and display ball motion
