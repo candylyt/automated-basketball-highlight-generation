@@ -54,10 +54,10 @@ function Statistics({data}) {
           <div className="verticalDivider" />
           <div className="detailedShots">
             <div className="totalShots">
-              <div className="shotNumber">{data.makes}/{data.attempts}</div>
+              <div className="shotNumber">{data.attempts}</div>
               <div>&nbsp;SHOTS</div>
             </div>
-            <div className="shotAttempts"></div>
+            <div className="shotAttempts">{data.makes}/{data.attempts}</div>
           </div>
         </div>
       </div>
