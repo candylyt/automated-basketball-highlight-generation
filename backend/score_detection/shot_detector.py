@@ -79,6 +79,7 @@ class ShotDetector:
 
             if not ret:
                 self.on_complete(self.attempts, self.makes)
+                print("processing complete")
                 break
 
             self.timestamp = self.cap.get(cv2.CAP_PROP_POS_MSEC)
@@ -196,6 +197,10 @@ class ShotDetector:
                     self.frame = cv2.polylines(self.frame, [pts], True, (0, 0, 255), 3)
                 cv2.imshow('Frame', self.frame)
 
+                # Close if 'q' is clicked
+                if cv2.waitKey(1) & 0xFF == ord('q'):  # higher waitKey slows video down, use 1 for webcam
+                    break
+
             # if self.screen_shot:
             #     cv2.imwrite(f"{screenshot_path}/{self.screen_shot_count}.png", self.frame)
             #     self.screen_shot = False
@@ -203,18 +208,17 @@ class ShotDetector:
 
 
 
-            # if self.save:
-            #     im = Image.fromarray(cv2.cvtColor(cv2.resize(self.frame, (env['output_width'], env['output_height'])), cv2.COLOR_BGR2RGB))
-            #     im.save(p.stdin, 'JPEG')
-                # self.out.write(cv2.resize(self.frame, (env['output_width'], env['output_height'])))
+            if self.save:
+                # im = Image.fromarray(cv2.cvtColor(cv2.resize(self.frame, (env['output_width'], env['output_height'])), cv2.COLOR_BGR2RGB))
+                # im.save(p.stdin, 'JPEG')
+                self.out.write(cv2.resize(self.frame, (env['output_width'], env['output_height'])))
 
-            # Close if 'q' is clicked
-            if cv2.waitKey(1) & 0xFF == ord('q'):  # higher waitKey slows video down, use 1 for webcam
-                break
+            
 
         self.on_complete(self.attempts, self.makes)
         self.cap.release()
-        cv2.destroyAllWindows()
+        if self.show_vid:
+            cv2.destroyAllWindows()
         print("done")
         
 
@@ -264,8 +268,10 @@ class ShotDetector:
                         if scored:
                             self.makes += 1
                             self.detect_callback(max(0, self.timestamp-3000), self.timestamp+2000, True)
+                            print("shot made")
                         else:
                             self.detect_callback(max(0, self.timestamp-3000), self.timestamp+2000, False)
+                            print("attempt made")
 
                         
                         self.up = False
@@ -282,6 +288,7 @@ class ShotDetector:
                     self.up = False
                     self.attempt_cooldown = 100
                     self.detect_callback(max(0, self.timestamp-5000), self.timestamp+3000, False)
+                    print("attempt made")
                     # self.attempts += 1
                     # self.overlay_color = (0, 0, 255)
                         # self.fade_counter = self.fade_frames
