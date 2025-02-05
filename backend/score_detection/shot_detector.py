@@ -76,6 +76,7 @@ class ShotDetector:
         
         while True:
             ret, self.frame = self.cap.read()
+
             if not ret:
                 self.on_complete(self.attempts, self.makes)
                 break
@@ -193,6 +194,7 @@ class ShotDetector:
                     pts = pts.reshape((-1, 1, 2))
 
                     self.frame = cv2.polylines(self.frame, [pts], True, (0, 0, 255), 3)
+                cv2.imshow('Frame', self.frame)
 
             # if self.screen_shot:
             #     cv2.imwrite(f"{screenshot_path}/{self.screen_shot_count}.png", self.frame)
@@ -200,21 +202,21 @@ class ShotDetector:
             #     self.screen_shot_count += 1
 
 
-                    cv2.imshow('Frame', cv2.resize(self.frame, (env['output_width'], env['output_height']) ))
-                    
-            if self.save:
-                # im = Image.fromarray(cv2.cvtColor(cv2.resize(self.frame, (env['output_width'], env['output_height'])), cv2.COLOR_BGR2RGB))
-                # im.save(p.stdin, 'JPEG')
-                self.out.write(cv2.resize(self.frame, (env['output_width'], env['output_height'])))
+
+            # if self.save:
+            #     im = Image.fromarray(cv2.cvtColor(cv2.resize(self.frame, (env['output_width'], env['output_height'])), cv2.COLOR_BGR2RGB))
+            #     im.save(p.stdin, 'JPEG')
+                # self.out.write(cv2.resize(self.frame, (env['output_width'], env['output_height'])))
 
             # Close if 'q' is clicked
             if cv2.waitKey(1) & 0xFF == ord('q'):  # higher waitKey slows video down, use 1 for webcam
                 break
 
-
+        self.on_complete(self.attempts, self.makes)
         self.cap.release()
-        self.out.release()
         cv2.destroyAllWindows()
+        print("done")
+        
 
     def clean_motion(self):
         # Clean and display ball motion
