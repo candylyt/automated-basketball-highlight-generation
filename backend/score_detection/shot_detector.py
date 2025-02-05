@@ -5,10 +5,11 @@ import cv2
 import cvzone
 import math
 import numpy as np
-from utils import score, detect_down, detect_up, in_hoop_region, clean_hoop_pos, clean_ball_pos
+from utils import score, detect_down, detect_up, in_hoop_region, clean_hoop_pos, clean_ball_pos, detect_score
 import os, shutil
 from subprocess import Popen, PIPE
 import yaml
+import datetime
 
 env = yaml.load(open('config.yaml', 'r'), Loader=yaml.SafeLoader)
 print(env)
@@ -28,6 +29,7 @@ class ShotDetector:
         # Use video - replace text with your video path
         self.cap = cv2.VideoCapture(video_path)
         self.frame_rate = self.cap.get(cv2.CAP_PROP_FPS)
+        print(self.frame_rate)
 
         print(f"FPS: {self.frame_rate}")
         self.ball_pos = []  # array of tuples ((x_pos, y_pos), frame count, width, height, conf)
@@ -48,6 +50,7 @@ class ShotDetector:
         # Used to detect shots (upper and lower region)
         self.up = False
         self.down = False
+        self.up_pos = None
         self.up_frame = 0
         self.down_frame = 0
 
@@ -63,9 +66,10 @@ class ShotDetector:
         self.attempt_cooldown = 0
         self.timestamp = None
 
-        # if self.save:
-        #     output_name = env['output_path'] + '/' + env['input'].split("/")[-1]
-        #     self.out = cv2.VideoWriter(output_name,  cv2.VideoWriter_fourcc(*'mp4v'), self.frame_rate, (env['output_width'], env['output_height']))
+        if self.save:
+            output_name = env['output_path'] + '/' + env['input'].split("/")[-1].split('.')[0] + str(datetime.datetime.now()) + ".mp4"
+            print(output_name)
+            self.out = cv2.VideoWriter(output_name,  cv2.VideoWriter_fourcc(*'mp4v'), self.frame_rate, (env['output_width'], env['output_height']))
         self.run()
 
     def run(self):
@@ -74,17 +78,13 @@ class ShotDetector:
             ret, self.frame = self.cap.read()
             if not ret:
                 self.on_complete(self.attempts, self.makes)
+                break
 
             self.timestamp = self.cap.get(cv2.CAP_PROP_POS_MSEC)
 
             
             # resize to match 
             det_frame = cv2.resize(self.frame, (1280, 720))
-
-
-            if not ret:
-                # End of the video or an error occurred
-                break
 
             results = self.model(det_frame, stream=True, verbose=False, imgsz=1280)
 
@@ -94,10 +94,10 @@ class ShotDetector:
                 boxes = sorted([(box.xyxy[0], box.conf, box.cls) for box in r.boxes], key=lambda x: -x[1])
                 #sort and get only top prediction for ball / hoop
 
-                ball, rim = False, False
+                ball, rim, shoot = False, False, False
 
                 for box in boxes:
-                    if ball and rim:
+                    if ball and rim and shoot:
                         break
                     # Bounding box
                     x1, y1, x2, y2 = box[0]
@@ -125,7 +125,7 @@ class ShotDetector:
                     #     self.hoop_pos.append((center, self.frame_count, w, h, conf))
                     #     cvzone.cornerRect(self.frame, (x1, y1, w, h))
 
-                    if (conf > 0.5 and current_class == 'rim' and not rim) or (conf > 0.3 and current_class == 'basketball' and not ball):
+                    if (conf > 0.4 and current_class == 'rim' and not rim) or (conf > 0.4 and current_class == 'basketball' and not ball) or (conf > 0.3 and current_class == 'shoot' and not shoot):
 
                         label = f"{current_class}: {conf}"
                         color = self.colors[cls]
@@ -142,6 +142,8 @@ class ShotDetector:
                         elif current_class == 'basketball':
                             ball = True
                             self.ball_pos.append((center, self.frame_count, w, h, conf))
+                        elif current_class == 'shoot':
+                            shoot = True
 
             self.clean_motion()
             self.shot_detection()
@@ -198,12 +200,12 @@ class ShotDetector:
             #     self.screen_shot_count += 1
 
 
-                    cv2.imshow('Frame', self.frame)
+                    cv2.imshow('Frame', cv2.resize(self.frame, (env['output_width'], env['output_height']) ))
                     
             if self.save:
-                im = Image.fromarray(cv2.cvtColor(cv2.resize(self.frame, (env['output_width'], env['output_height'])), cv2.COLOR_BGR2RGB))
-                im.save(p.stdin, 'JPEG')
-                # self.out.write(cv2.resize(self.frame, (env['output_width'], env['output_height'])))
+                # im = Image.fromarray(cv2.cvtColor(cv2.resize(self.frame, (env['output_width'], env['output_height'])), cv2.COLOR_BGR2RGB))
+                # im.save(p.stdin, 'JPEG')
+                self.out.write(cv2.resize(self.frame, (env['output_width'], env['output_height'])))
 
             # Close if 'q' is clicked
             if cv2.waitKey(1) & 0xFF == ord('q'):  # higher waitKey slows video down, use 1 for webcam
@@ -231,41 +233,46 @@ class ShotDetector:
         #only execute if hoop and ball pos is known
         if len(self.hoop_pos) > 0 and len(self.ball_pos) > 0:
             
-            # Made: Enters hoop region, shortly after enters down region
+            # Made: Enters hoop region, shortly after enters down region, 
             # Attempt: Enters up region, then exits up region without entering hoop region
             
+
             
             #TODO: modify up state to only be true when ball is near the hoop
             #Detect Up
-            if self.attempt_cooldown == 0:
-                self.up = detect_up(self.ball_pos, self.hoop_pos)
-
-            #Detect Hoop
-
-
-            #Detect Down
-
+            self.up = detect_up(self.ball_pos, self.hoop_pos)
 
             if self.up:
                 # self.attempts += 1
-                self.up_frame = self.ball_pos[-1][1]
+                self.up_pos = self.ball_pos[-1][0]
                 self.frame = cv2.putText(self.frame, 'UP', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+                if self.attempt_cooldown == 0:
+                    self.up_frame = self.ball_pos[-1][1]    
 
             #TODO: modify down state to be true when ball is in area under hoop
             if self.up_frame:
                 if self.frame_count - self.up_frame < 72:
                     self.down = detect_down(self.ball_pos, self.hoop_pos)
                     if self.down:
+                        #Add linear interpolation
+                        scored = detect_score(self.ball_pos, self.hoop_pos, self.up_pos)
+
                         self.attempts += 1
                         self.frame = cv2.putText(self.frame, 'DOWN', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
-                        self.makes += 1
+                        if scored:
+                            self.makes += 1
+                            self.detect_callback(max(0, self.timestamp-3000), self.timestamp+2000, True)
+                        else:
+                            self.detect_callback(max(0, self.timestamp-3000), self.timestamp+2000, False)
+
+                        
                         self.up = False
                         self.down = False
                         self.up_frame = None
                         self.overlay_color = (0, 255, 0)
                         self.fade_counter = self.fade_frames
                         self.attempt_cooldown = 100
-                        self.detect_callback(max(0, self.timestamp-3000), self.timestamp+2000, True)
+                
                 else:
                     self.up_frame = None
                     self.attempts += 1
@@ -319,6 +326,7 @@ class ShotDetector:
             self.fade_counter -= 1
 
 
-# if __name__ == "__main__":
-#     ShotDetector()
+if __name__ == "__main__":
+    ShotDetector(env['input'], lambda x,y,z: 0, lambda x, y: print(x,y), False)
+    # def __init__(self, video_path, on_detect, on_complete, show_vid=False):
 
