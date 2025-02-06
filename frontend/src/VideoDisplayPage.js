@@ -31,13 +31,13 @@ function VideoDisplayPage() {
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = totalSeconds % 60;
 
-    const pad = (num) => String(num).padStart(2, '0');
+    const pad = (num) => String(num).padStart(2, "0");
     if (hours > 0) {
       return `${hours}:${pad(minutes)}:${pad(seconds)}`;
     } else {
       return `${minutes}:${pad(seconds)}`;
     }
-  }
+  };
 
   const socket = io("http://127.0.0.1:5001");
 
@@ -107,7 +107,7 @@ function VideoDisplayPage() {
               ))}
             </div>
           </div>
-          <Statistics data={statistics} />
+          <Statistics data={statistics} timestamps={timestamps} video={file} />
         </div>
       ) : (
         <div className="VD-error">
