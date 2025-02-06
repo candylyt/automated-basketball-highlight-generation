@@ -1,8 +1,7 @@
-weights_path: 'weights/best-scoring.pt'
-classes: ['basketball', 'rim', 'made']
-# input: 'videos/nba1.mp4'
-# input: 'videos/amateur2.mp4'
-input: 'videos/fail1.mp4'
+weights_path: 'weights/20250115best.pt'
+classes: ['basketball', 'made', 'person', 'rim', 'shoot']
+input: 'uploads/nba1.mp4'
+# input: 'uploads/amateur2.mp4'
 save_video: False
 output_path: 'output'
 upload_path: 'uploads'

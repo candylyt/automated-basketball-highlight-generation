@@ -109,7 +109,6 @@ def in_hoop_region(center, hoop_pos):
         return True
     return False
 
-
 # Removes inaccurate data points
 # TODO: improve noise filtering
 def clean_ball_pos(ball_pos, frame_count):
@@ -151,7 +150,6 @@ def clean_ball_pos(ball_pos, frame_count):
 
     return ball_pos
 
-
 def clean_hoop_pos(hoop_pos):
     # Prevents jumping from one hoop to another
     if len(hoop_pos) > 1:
@@ -187,3 +185,24 @@ def clean_hoop_pos(hoop_pos):
         hoop_pos.pop(0)
 
     return hoop_pos
+
+def detect_score(ball_pos, hoop_pos, up_pos):
+    #last item in ball_pos is the first ball position in down region
+    #up_pos is the last ball position in up region
+    #check if it crosses the hoop
+    down_pos = ball_pos[-1][0]
+    down_x, down_y = down_pos[0], down_pos[1]
+    up_x, up_y = up_pos[0], up_pos[1]
+    hoop_l, hoop_r = hoop_pos[-1][0][0] - 0.5 * hoop_pos[-1][2], hoop_pos[-1][0][0] + 0.5 * hoop_pos[-1][2]
+    hoop_y = hoop_pos[-1][0][1]
+
+    slope = (down_y - up_y) / (down_x - up_x)
+    delta_y = hoop_y - up_y
+    int_x = up_x + delta_y/slope
+
+    print(hoop_l, int_x, hoop_r)
+
+    return hoop_l < int_x < hoop_r
+
+
+    

@@ -14,11 +14,11 @@ def test_upload_and_socket():
 
     @sio.on('shooting_detected')
     def on_shooting_detected(data):
-        print(f"Response: {data['start_time']}, {data['end_time']}, {data['success']}")
+        print(f"[shooting_detected] Response: {data['start_time']}, {data['end_time']}, {data['success']}")
 
     @sio.on('processing_complete')
     def on_processing_complete(data):
-        print(f"Response: {data['makes']}/{data['attempts']}")
+        print(f"[processing_complete] Response: {data['makes']}/{data['attempts']}")
 
     # Connect to server
     try:
