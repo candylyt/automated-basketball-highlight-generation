@@ -30,6 +30,7 @@
 
 button {
   margin: 5px;
+  margin-left: 10px;
   padding: 10px 20px;
   border: none;
   border-radius: 5px;
@@ -90,7 +91,11 @@ h2 {
 }
 
 .stepLabel {
-  margin-top: 20px;
+  margin-top: 10px;
+  font-size: calc(5px + 2vmin);
+  font-weight: 500;
+  margin-bottom: 10px;
+  margin-left: 10px;
 }
 
 .highlightContainer {
@@ -107,6 +112,7 @@ h2 {
 
 a {
   margin: 5px;
+  margin-left: 10px;
   padding: 10px 20px;
   border: none;
   border-radius: 5px;
@@ -125,4 +131,32 @@ a.disabled {
   position: absolute;
   bottom: 2%;
   right: 4%;
+  background-color: white;
+  color: black;
+  font-size: medium;
+  font-weight: 800;
+}
+
+.close:hover {
+  text-decoration: underline;
+}
+
+.divider {
+  margin-top: 10px;
+  margin-left: 10px;
+  margin-bottom: 10px;
+  width: 36vw;
+  border: black;
+  border: dotted;
+}
+
+.reportContainer {
+  display: flex;
+  flex-direction: row;
+}
+
+.reportButton {
+  font-size: medium;
+  background-color: navy;
+  height: 3.6vh;
 }

@@ -1,10 +1,12 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 from flask_socketio import SocketIO
 from shot_detector import ShotDetector
+from generate_pdf import generate_basketball_pdf
 from flask_cors import CORS
 import threading
 import yaml
 import os
+import time
 
 env = yaml.load(open('config.yaml', 'r'), Loader=yaml.SafeLoader)
 
@@ -44,6 +46,43 @@ def upload_video():
     thread.start()
 
     return jsonify({'message' : 'Processing started successfully'})
+    
+@app.route('/generate-report', methods=['POST'])
+def generate_report():
+    print('generate report')
+    try:
+        data = request.json  # Receive JSON data from frontend
+
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], "basketball_game_report.pdf")
+
+        # Extract required data from the frontend request
+        game_summary = data.get("game_summary", {})
+        field_goals_stats = data.get("field_goals_stats", {})
+        shot_types_stats = data.get("shot_types_stats", {})
+        shot_zones_stats = data.get("shot_zones_stats", {})
+        match = data.get("match", True)
+        quarter_scores = data.get("quarter_scores", {})
+        quarter_percentages = data.get("quarter_percentages", {})
+        shot_data = data.get("shot_data", [])
+        court_image_path = "court_img.png"  # Ensure this file exists in your backend
+
+        # Generate PDF
+        generate_basketball_pdf(
+            file_path,
+            game_summary,
+            field_goals_stats,
+            shot_types_stats,
+            shot_zones_stats,
+            match,
+            quarter_scores,
+            quarter_percentages,
+            shot_data,
+            court_image_path,
+        )
+        return send_file(file_path, as_attachment=True, mimetype="application/pdf")
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":
