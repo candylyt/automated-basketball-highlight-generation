@@ -16,6 +16,98 @@ print(env)
 
 # p = Popen(['ffmpeg', '-y', '-f', 'image2pipe', '-vcodec', 'mjpeg', '-r', '24', '-i', '-', '-vcodec', 'h264', '-qscale', '5', '-r', '24', env['output_path'] + '/' + env['input'].split("/")[-1]], stdin=PIPE)
 
+class VideoComposer:
+    def __init__(self, output_dir):
+        self.output_dir = output_dir
+        self.made_shots = []
+        self.missed_shots = []
+        self.made_writer = None
+        self.missed_writer = None
+        os.makedirs(output_dir, exist_ok=True)
+
+    def add_shot(self, video_path, start_time, end_time, made):
+        shot_info = {
+            'video_path': video_path,
+            'start_time': start_time,
+            'end_time': end_time
+        }
+        if made:
+            self.made_shots.append(shot_info)
+        else:
+            self.missed_shots.append(shot_info)
+
+    def _create_clip(self, shot_info, output_path):
+        cap = cv2.VideoCapture(shot_info['video_path'])
+        fps = int(cap.get(cv2.CAP_PROP_FPS))
+        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        
+        # Calculate frame positions
+        start_frame = int((shot_info['start_time'] / 1000.0) * fps)
+        end_frame = int((shot_info['end_time'] / 1000.0) * fps)
+        
+        cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
+        
+        writer = None
+        frame_count = 0
+        
+        while cap.isOpened() and frame_count < (end_frame - start_frame):
+            ret, frame = cap.read()
+            if not ret:
+                break
+                
+            if writer is None:
+                writer = cv2.VideoWriter(
+                    output_path,
+                    cv2.VideoWriter_fourcc(*'mp4v'),
+                    fps,
+                    (width, height)
+                )
+            
+            writer.write(frame)
+            frame_count += 1
+        
+        if writer:
+            writer.release()
+        cap.release()
+
+    def compose_videos(self):
+        made_output = os.path.join(self.output_dir, 'made_shots.mp4')
+        missed_output = os.path.join(self.output_dir, 'missed_shots.mp4')
+        
+        # Process made shots
+        for shot in self.made_shots:
+            temp_output = os.path.join(self.output_dir, f'temp_made_{len(self.made_shots)}.mp4')
+            self._create_clip(shot, temp_output)
+            
+            if not os.path.exists(made_output):
+                os.rename(temp_output, made_output)
+            else:
+                self._concatenate_videos(made_output, temp_output, made_output)
+                os.remove(temp_output)
+        
+        # Process missed shots
+        for shot in self.missed_shots:
+            temp_output = os.path.join(self.output_dir, f'temp_missed_{len(self.missed_shots)}.mp4')
+            self._create_clip(shot, temp_output)
+            
+            if not os.path.exists(missed_output):
+                os.rename(temp_output, missed_output)
+            else:
+                self._concatenate_videos(missed_output, temp_output, missed_output)
+                os.remove(temp_output)
+        
+        return made_output, missed_output
+
+    def _concatenate_videos(self, video1_path, video2_path, output_path):
+        temp_file = "temp_file_list.txt"
+        with open(temp_file, "w") as f:
+            f.write(f"file '{video1_path}'\nfile '{video2_path}'")
+        
+        os.system(f'ffmpeg -f concat -safe 0 -i {temp_file} -c copy {output_path}.tmp')
+        os.rename(f'{output_path}.tmp', output_path)
+        os.remove(temp_file)
+
 class ShotDetector:
     def __init__(self, video_path, on_detect, on_complete, show_vid=False):
         # Load the YOLO model created from main.py - change text to your relative path
@@ -25,13 +117,18 @@ class ShotDetector:
         self.detect_callback = on_detect
         self.on_complete = on_complete
         self.show_vid = show_vid
+        self.video_path = video_path
+
+        # Initialize video composer
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        self.output_dir = os.path.join(env['output_path'], f'shots_{timestamp}')
+        self.video_composer = VideoComposer(self.output_dir)
 
         # Use video - replace text with your video path
         self.cap = cv2.VideoCapture(video_path)
         self.frame_rate = self.cap.get(cv2.CAP_PROP_FPS)
-        print(self.frame_rate)
-
         print(f"FPS: {self.frame_rate}")
+
         self.ball_pos = []  # array of tuples ((x_pos, y_pos), frame count, width, height, conf)
         self.hoop_pos = []  # array of tuples ((x_pos, y_pos), frame count, width, height, conf)
 
@@ -67,18 +164,26 @@ class ShotDetector:
         self.timestamp = None
 
         if self.save:
-            output_name = env['output_path'] + '/' + env['input'].split("/")[-1].split('.')[0] + str(datetime.datetime.now()) + ".mp4"
+            output_name = os.path.join(self.output_dir, 'full_analysis.mp4')
             print(output_name)
-            self.out = cv2.VideoWriter(output_name,  cv2.VideoWriter_fourcc(*'mp4v'), self.frame_rate, (env['output_width'], env['output_height']))
+            self.out = cv2.VideoWriter(output_name, cv2.VideoWriter_fourcc(*'mp4v'), self.frame_rate, (env['output_width'], env['output_height']))
+        
         self.run()
 
+    def on_shot_detected(self, start_time, end_time, made):
+        # Add shot to video composer
+        self.video_composer.add_shot(self.video_path, start_time, end_time, made)
+        # Call original callback
+        self.detect_callback(start_time, end_time, made)
+
     def run(self):
-        
         while True:
             ret, self.frame = self.cap.read()
 
             if not ret:
-                self.on_complete(self.attempts, self.makes)
+                # Compose final videos before completing
+                made_path, missed_path = self.video_composer.compose_videos()
+                self.on_complete(self.attempts, self.makes, made_path, missed_path)
                 print("processing complete")
                 break
 
@@ -215,7 +320,6 @@ class ShotDetector:
 
             
 
-        self.on_complete(self.attempts, self.makes)
         self.cap.release()
         if self.show_vid:
             cv2.destroyAllWindows()
@@ -267,10 +371,10 @@ class ShotDetector:
                         self.frame = cv2.putText(self.frame, 'DOWN', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
                         if scored:
                             self.makes += 1
-                            self.detect_callback(max(0, self.timestamp-3000), self.timestamp+2000, True)
+                            self.on_shot_detected(max(0, self.timestamp-3000), self.timestamp+2000, True)
                             print("shot made")
                         else:
-                            self.detect_callback(max(0, self.timestamp-3000), self.timestamp+2000, False)
+                            self.on_shot_detected(max(0, self.timestamp-3000), self.timestamp+2000, False)
                             print("attempt made")
 
                         
@@ -287,7 +391,7 @@ class ShotDetector:
                     self.down = False
                     self.up = False
                     self.attempt_cooldown = 100
-                    self.detect_callback(max(0, self.timestamp-5000), self.timestamp+3000, False)
+                    self.on_shot_detected(max(0, self.timestamp-5000), self.timestamp+3000, False)
                     print("attempt made")
                     # self.attempts += 1
                     # self.overlay_color = (0, 0, 255)

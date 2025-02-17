@@ -1,90 +1,109 @@
 import React from "react";
-import { ReactComponent as ExportIcon } from "../assets/exportIcon.svg";
 import "./Statistics.css";
 import Export from "./Export";
 
 function Statistics({ data, timestamps, video }) {
   const calculatePercentage = (numerator, denominator) => {
+    if (!denominator) return 0;
     return (numerator / denominator) * 100;
   };
+
+  if (!data) {
+    return (
+      <div className="statistics">
+        <h2>Statistics</h2>
+        <div className="division" />
+        <p>Processing video...</p>
+      </div>
+    );
+  }
+
+  // Extract data with default values
+  const {
+    attempts = 0,
+    makes = 0,
+    made_contested = 0,
+    made_uncontested = 0,
+    missed_contested = 0,
+    missed_uncontested = 0
+  } = data;
+
+  const totalContested = made_contested + missed_contested;
+  const totalUncontested = made_uncontested + missed_uncontested;
 
   return (
     <div className="statistics">
       <h2>Statistics</h2>
       <div className="division" />
+      
       <div className="statisticsItem">
         <div className="statisticsItemTitle">Overall Shooting Percentage</div>
         <div className="statisticsItemValue">
           <div className="shootingPercentage">
             <div className="number">
-              {data
-                ? calculatePercentage(data.makes, data.attempts).toFixed(1)
-                : "-"}
+              {calculatePercentage(makes, attempts).toFixed(1)}
               <span className="percentage">%</span>
             </div>
           </div>
           <div className="verticalDivider" />
           <div className="detailedShots">
             <div className="totalShots">
-              <div className="shotNumber">{data ? data.attempts : "-"}</div>
+              <div className="shotNumber">{attempts}</div>
               <div>&nbsp;SHOTS</div>
             </div>
             <div className="shotAttempts">
-              {data ? `${data.makes}/${data.attempts}` : "-/-"}
+              {`${makes}/${attempts}`}
             </div>
           </div>
         </div>
       </div>
+
       <div className="statisticsItem">
         <div className="statisticsItemTitle">Uncontested</div>
         <div className="statisticsItemValue">
           <div className="shootingPercentage">
             <div className="number">
-              {data
-                ? calculatePercentage(data.makes, data.attempts).toFixed(1)
-                : "-"}
+              {calculatePercentage(made_uncontested, totalUncontested).toFixed(1)}
               <span className="percentage">%</span>
             </div>
           </div>
           <div className="verticalDivider" />
           <div className="detailedShots">
             <div className="totalShots">
-              <div className="shotNumber">{data ? data.attempts : "-"}</div>
+              <div className="shotNumber">{totalUncontested}</div>
               <div>&nbsp;SHOTS</div>
             </div>
             <div className="shotAttempts">
-              {data ? `${data.makes}/${data.attempts}` : "-/-"}
+              {`${made_uncontested}/${totalUncontested}`}
             </div>
           </div>
         </div>
       </div>
+
       <div className="statisticsItem">
         <div className="statisticsItemTitle">Contested</div>
         <div className="statisticsItemValue">
           <div className="shootingPercentage">
             <div className="number">
-              {data
-                ? calculatePercentage(data.makes, data.attempts).toFixed(1)
-                : "-"}
+              {calculatePercentage(made_contested, totalContested).toFixed(1)}
               <span className="percentage">%</span>
             </div>
           </div>
           <div className="verticalDivider" />
           <div className="detailedShots">
             <div className="totalShots">
-              <div className="shotNumber">{data ? data.attempts : "-"}</div>
+              <div className="shotNumber">{totalContested}</div>
               <div>&nbsp;SHOTS</div>
             </div>
             <div className="shotAttempts">
-              {data ? `${data.makes}/${data.attempts}` : "-/-"}
+              {`${made_contested}/${totalContested}`}
             </div>
           </div>
         </div>
       </div>
-      {data && (
+
+      {timestamps && video && (
         <div className="export">
-          {/* <div>Export</div>
-        <ExportIcon className="exportIcon" /> */}
           <Export timestamps={timestamps} video={video} />
         </div>
       )}
