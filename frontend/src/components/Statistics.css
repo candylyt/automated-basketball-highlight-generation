@@ -1,130 +1,186 @@
 .statistics {
-  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
-  width: 20vw;
-  height: 75vh;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  width: 24vw;
+  height: auto;
+  min-height: 75vh;
   margin-left: 3vw;
   display: flex;
   flex-direction: column;
   position: relative;
-  padding: 15px;
+  padding: 20px;
   background-color: #ffffff;
-  border-radius: 10px;
+  border-radius: 12px;
 }
 
 .statistics h2 {
-  font-size: 24px;
-  font-weight: 600;
-  margin-top: 11px;
+  font-size: 28px;
+  font-weight: 700;
+  margin-top: 8px;
   margin-left: 15px;
-  margin-bottom: 1px;
-  align-self: flex-start;
+  margin-bottom: 4px;
+  color: #2c3e50;
 }
 
 .division {
   width: 45%;
-  height: 1px;
-  background-color: black;
-  border: 1px solid black;
+  height: 2px;
+  background-color: #3498db;
   margin-left: 15px;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
+}
+
+.stats-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 0 15px;
 }
 
 .statisticsItem {
   display: flex;
   flex-direction: column;
-  margin-left: 15px;
-  margin-bottom: 15px;
-  padding: 10px;
+  padding: 15px;
   background-color: #f8f9fa;
-  border-radius: 8px;
+  border-radius: 10px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.statisticsItem:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.statisticsItem.overall {
+  background-color: #e3f2fd;
+  border-left: 4px solid #2196f3;
+}
+
+.statisticsItem.uncontested {
+  background-color: #e8f5e9;
+  border-left: 4px solid #4caf50;
+}
+
+.statisticsItem.contested {
+  background-color: #fff3e0;
+  border-left: 4px solid #ff9800;
 }
 
 .statisticsItemTitle {
-  font-weight: 500;
-  font-size: 16px;
-  margin-bottom: 10px;
-  color: #495057;
+  font-weight: 600;
+  font-size: 18px;
+  margin-bottom: 12px;
+  color: #2c3e50;
 }
 
 .statisticsItemValue {
   display: flex;
   flex-direction: row;
-  font-size: 18px;
-  justify-content: center;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0 10px;
 }
 
 .verticalDivider {
-  width: 3px;
-  height: 30px;
+  width: 2px;
+  height: 40px;
   background-color: #e0e0e0;
-  margin-left: 20px;
-  margin-right: 15px;
+  margin: 0 20px;
 }
 
 .shootingPercentage {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
+  min-width: 100px;
 }
 
 .number {
-  font-size: 28px;
+  font-size: 32px;
+  font-weight: 700;
+  color: #2c3e50;
 }
 
 .percentage {
-  font-size: 18px;
-  margin-left: 5px;
+  font-size: 20px;
+  margin-left: 2px;
+  color: #7f8c8d;
 }
 
 .totalShots {
-  font-size: 16px;
   display: flex;
-  flex-direction: row;
+  align-items: baseline;
+  gap: 5px;
 }
 
 .shotNumber {
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 20px;
+  color: #2c3e50;
+}
+
+.shotLabel {
+  font-size: 14px;
+  color: #7f8c8d;
+  text-transform: uppercase;
 }
 
 .shotAttempts {
-  font-size: 14px;
-  color: grey;
-}
-
-.detailedShots {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.export {
-  position: absolute;
-  bottom: 5%;
-  display: flex;
-  left: 10vmin;
-  font-size: 18px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-/* Loading state */
-.statistics p {
-  text-align: center;
-  color: #6c757d;
-  margin: 20px 0;
-  font-style: italic;
   font-size: 16px;
+  color: #7f8c8d;
+  margin-top: 4px;
+}
+
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: #3498db;
+  font-size: 18px;
+  font-style: italic;
+}
+
+.error-message {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: #e74c3c;
+  font-size: 16px;
+  text-align: center;
+  padding: 20px;
+}
+
+.export-container {
+  margin-top: auto;
+  padding: 20px 15px;
+  border-top: 1px solid #ecf0f1;
 }
 
 /* Responsive adjustments */
+@media (max-width: 1200px) {
+  .statistics {
+    width: 30vw;
+  }
+}
+
+@media (max-width: 992px) {
+  .statistics {
+    width: 40vw;
+  }
+}
+
 @media (max-width: 768px) {
   .statistics {
     width: 90vw;
-    margin: 10px auto;
+    margin: 20px auto;
+    min-height: auto;
   }
 
-  .statisticsItem {
-    margin-left: 10px;
-    margin-right: 10px;
+  .statisticsItemValue {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .verticalDivider {
+    display: none;
   }
 }

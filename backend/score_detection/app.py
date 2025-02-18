@@ -9,6 +9,7 @@ from datetime import datetime
 from shot_detector import ShotDetector
 from contest import ContestAnalyzer
 from generate_pdf import generate_basketball_pdf
+import json
 
 # Load environment configuration
 env = yaml.load(open('config.yaml', 'r'), Loader=yaml.SafeLoader)
@@ -23,20 +24,24 @@ RESULTS_DIR = os.path.join(app.config['UPLOAD_FOLDER'], "results")
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(RESULTS_DIR, exist_ok=True)
 
-class VideoProcessor:
+class ResultManager:
     def __init__(self, socket):
         self.socket = socket
-        self.shots_detected = 0
-        self.shots_made = 0
-        self.made_shots_path = None
-        self.missed_shots_path = None
-        self.contest_results = None
         self.timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         self.analysis_dir = os.path.join(RESULTS_DIR, self.timestamp)
         os.makedirs(self.analysis_dir, exist_ok=True)
+        self.statistics = {
+            'attempts': 0,
+            'makes': 0,
+            'made_contested': 0,
+            'made_uncontested': 0,
+            'missed_contested': 0,
+            'missed_uncontested': 0,
+            'made_shots_video': None,
+            'missed_shots_video': None
+        }
 
     def on_shot_detect(self, start_time: float, end_time: float, made: bool):
-        # Emit real-time shot detection event
         self.socket.emit('shooting_detected', {
             'success': True,
             'start_time': start_time,
@@ -45,11 +50,9 @@ class VideoProcessor:
         })
 
     def on_detection_complete(self, attempts: int, makes: int, made_path: str, missed_path: str):
-        self.shots_detected = attempts
-        self.shots_made = makes
-        self.made_shots_path = made_path
-        self.missed_shots_path = missed_path
-
+        self.statistics['attempts'] = attempts
+        self.statistics['makes'] = makes
+        
         try:
             # Process contest analysis
             analyzer = ContestAnalyzer()
@@ -57,53 +60,42 @@ class VideoProcessor:
             # Analyze made shots
             if made_path and os.path.exists(made_path):
                 made_contest_results = analyzer.analyze_video(made_path)
-            else:
-                made_contest_results = {"contested_shots": 0, "uncontested_shots": 0}
+                self.statistics['made_contested'] = made_contest_results["contested_shots"]
+                self.statistics['made_uncontested'] = made_contest_results["uncontested_shots"]
             
             # Analyze missed shots
             if missed_path and os.path.exists(missed_path):
                 missed_contest_results = analyzer.analyze_video(missed_path)
-            else:
-                missed_contest_results = {"contested_shots": 0, "uncontested_shots": 0}
+                self.statistics['missed_contested'] = missed_contest_results["contested_shots"]
+                self.statistics['missed_uncontested'] = missed_contest_results["uncontested_shots"]
 
             # Convert absolute paths to relative paths for frontend
-            made_video_path = os.path.relpath(made_path, RESULTS_DIR) if made_path else None
-            missed_video_path = os.path.relpath(missed_path, RESULTS_DIR) if missed_path else None
+            self.statistics['made_shots_video'] = os.path.relpath(made_path, RESULTS_DIR) if made_path else None
+            self.statistics['missed_shots_video'] = os.path.relpath(missed_path, RESULTS_DIR) if missed_path else None
+
+            # Store statistics in a file for later retrieval
+            stats_file = os.path.join(self.analysis_dir, 'statistics.json')
+            with open(stats_file, 'w') as f:
+                json.dump(self.statistics, f)
 
             # Emit complete results
-            self.socket.emit('processing_complete', {
-                'attempts': attempts,
-                'makes': makes,
-                'made_contested': made_contest_results["contested_shots"],
-                'made_uncontested': made_contest_results["uncontested_shots"],
-                'missed_contested': missed_contest_results["contested_shots"],
-                'missed_uncontested': missed_contest_results["uncontested_shots"],
-                'made_shots_video': made_video_path,
-                'missed_shots_video': missed_video_path
-            })
+            self.socket.emit('processing_complete', self.statistics)
+            
         except Exception as e:
             print(f"Error in contest analysis: {str(e)}")
             # Emit basic results without contest analysis
-            self.socket.emit('processing_complete', {
-                'attempts': attempts,
-                'makes': makes,
-                'made_contested': 0,
-                'made_uncontested': makes,
-                'missed_contested': 0,
-                'missed_uncontested': attempts - makes,
-                'made_shots_video': made_video_path if 'made_video_path' in locals() else None,
-                'missed_shots_video': missed_video_path if 'missed_video_path' in locals() else None
-            })
+            self.socket.emit('processing_complete', self.statistics)
 
 def process_video(video_path):
     try:
-        processor = VideoProcessor(socketio)
+        result_manager = ResultManager(socketio)
         detector = ShotDetector(
             video_path=video_path,
-            on_detect=processor.on_shot_detect,
-            on_complete=processor.on_detection_complete,
+            on_detect=result_manager.on_shot_detect,
+            on_complete=result_manager.on_detection_complete,
             show_vid=False
         )
+        detector.run()  # Start the video processing
     except Exception as e:
         socketio.emit('error', {'message': str(e)})
     finally:
@@ -167,6 +159,17 @@ def generate_report():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route('/get_statistics/<timestamp>', methods=['GET'])
+def get_statistics(timestamp):
+    try:
+        stats_file = os.path.join(RESULTS_DIR, timestamp, 'statistics.json')
+        if os.path.exists(stats_file):
+            with open(stats_file, 'r') as f:
+                return jsonify(json.load(f))
+        return jsonify({'error': 'Statistics not found'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == "__main__":
     socketio.run(app, debug=True, port=5001) 

@@ -59,7 +59,7 @@ class VideoComposer:
             if writer is None:
                 writer = cv2.VideoWriter(
                     output_path,
-                    cv2.VideoWriter_fourcc(*'mp4v'),
+                    cv2.VideoWriter_fourcc(*'avc1'),  # Using H.264 codec
                     fps,
                     (width, height)
                 )
@@ -71,42 +71,55 @@ class VideoComposer:
             writer.release()
         cap.release()
 
+    def _concatenate_videos(self, video1_path, video2_path, output_path):
+        # Create a temporary file list
+        temp_file = os.path.join(self.output_dir, "temp_file_list.txt")
+        with open(temp_file, "w") as f:
+            f.write(f"file '{video1_path}'\nfile '{video2_path}'")
+        
+        # Use ffmpeg with specific codec settings
+        temp_output = f"{output_path}.tmp"
+        os.system(f'ffmpeg -f concat -safe 0 -i {temp_file} -c:v libx264 -preset medium -crf 23 -y {temp_output}')
+        
+        # Check if the concatenation was successful
+        if os.path.exists(temp_output) and os.path.getsize(temp_output) > 0:
+            os.rename(temp_output, output_path)
+        else:
+            # Fallback: if concatenation fails, just keep the first video
+            os.rename(video1_path, output_path)
+            
+        # Cleanup
+        if os.path.exists(temp_file):
+            os.remove(temp_file)
+        if os.path.exists(video2_path):
+            os.remove(video2_path)
+
     def compose_videos(self):
         made_output = os.path.join(self.output_dir, 'made_shots.mp4')
         missed_output = os.path.join(self.output_dir, 'missed_shots.mp4')
         
         # Process made shots
-        for shot in self.made_shots:
-            temp_output = os.path.join(self.output_dir, f'temp_made_{len(self.made_shots)}.mp4')
+        for i, shot in enumerate(self.made_shots):
+            temp_output = os.path.join(self.output_dir, f'temp_made_{i}.mp4')
             self._create_clip(shot, temp_output)
             
             if not os.path.exists(made_output):
                 os.rename(temp_output, made_output)
             else:
                 self._concatenate_videos(made_output, temp_output, made_output)
-                os.remove(temp_output)
         
         # Process missed shots
-        for shot in self.missed_shots:
-            temp_output = os.path.join(self.output_dir, f'temp_missed_{len(self.missed_shots)}.mp4')
+        for i, shot in enumerate(self.missed_shots):
+            temp_output = os.path.join(self.output_dir, f'temp_missed_{i}.mp4')
             self._create_clip(shot, temp_output)
             
             if not os.path.exists(missed_output):
                 os.rename(temp_output, missed_output)
             else:
                 self._concatenate_videos(missed_output, temp_output, missed_output)
-                os.remove(temp_output)
         
-        return made_output, missed_output
-
-    def _concatenate_videos(self, video1_path, video2_path, output_path):
-        temp_file = "temp_file_list.txt"
-        with open(temp_file, "w") as f:
-            f.write(f"file '{video1_path}'\nfile '{video2_path}'")
-        
-        os.system(f'ffmpeg -f concat -safe 0 -i {temp_file} -c copy {output_path}.tmp')
-        os.rename(f'{output_path}.tmp', output_path)
-        os.remove(temp_file)
+        return (made_output if self.made_shots else None, 
+                missed_output if self.missed_shots else None)
 
 class ShotDetector:
     def __init__(self, video_path, on_detect, on_complete, show_vid=False):
@@ -310,15 +323,10 @@ class ShotDetector:
             #     cv2.imwrite(f"{screenshot_path}/{self.screen_shot_count}.png", self.frame)
             #     self.screen_shot = False
             #     self.screen_shot_count += 1
-
-
-
             if self.save:
                 # im = Image.fromarray(cv2.cvtColor(cv2.resize(self.frame, (env['output_width'], env['output_height'])), cv2.COLOR_BGR2RGB))
                 # im.save(p.stdin, 'JPEG')
                 self.out.write(cv2.resize(self.frame, (env['output_width'], env['output_height'])))
-
-            
 
         self.cap.release()
         if self.show_vid:

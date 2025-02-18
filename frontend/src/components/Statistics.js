@@ -1,19 +1,71 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import "./Statistics.css";
 import Export from "./Export";
 
 function Statistics({ data, timestamps, video }) {
+  const [historicalData, setHistoricalData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    // If we have a timestamp, try to fetch historical data
+    if (timestamps && timestamps.length > 0) {
+      setLoading(true);
+      fetch(`/get_statistics/${timestamps[timestamps.length - 1]}`)
+        .then(res => {
+          if (!res.ok) throw new Error('Failed to fetch statistics');
+          return res.json();
+        })
+        .then(data => {
+          setHistoricalData(data);
+          setError(null);
+        })
+        .catch(err => {
+          setError(err.message);
+          console.error('Error fetching statistics:', err);
+        })
+        .finally(() => setLoading(false));
+    }
+  }, [timestamps]);
+
   const calculatePercentage = (numerator, denominator) => {
     if (!denominator) return 0;
     return (numerator / denominator) * 100;
   };
 
-  if (!data) {
+  // Show loading state
+  if (loading) {
     return (
       <div className="statistics">
         <h2>Statistics</h2>
         <div className="division" />
-        <p>Processing video...</p>
+        <div className="loading-spinner">Loading statistics...</div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="statistics">
+        <h2>Statistics</h2>
+        <div className="division" />
+        <div className="error-message">
+          Error loading statistics. Please try again.
+        </div>
+      </div>
+    );
+  }
+
+  // Use current data or historical data
+  const statsData = data || historicalData;
+
+  if (!statsData) {
+    return (
+      <div className="statistics">
+        <h2>Statistics</h2>
+        <div className="division" />
+        <p>Waiting for video processing...</p>
       </div>
     );
   }
@@ -26,84 +78,65 @@ function Statistics({ data, timestamps, video }) {
     made_uncontested = 0,
     missed_contested = 0,
     missed_uncontested = 0
-  } = data;
+  } = statsData;
 
   const totalContested = made_contested + missed_contested;
   const totalUncontested = made_uncontested + missed_uncontested;
 
+  const statItems = [
+    {
+      title: "Overall Shooting",
+      makes: makes,
+      attempts: attempts,
+      className: "overall"
+    },
+    {
+      title: "Uncontested Shots",
+      makes: made_uncontested,
+      attempts: totalUncontested,
+      className: "uncontested"
+    },
+    {
+      title: "Contested Shots",
+      makes: made_contested,
+      attempts: totalContested,
+      className: "contested"
+    }
+  ];
+
   return (
     <div className="statistics">
-      <h2>Statistics</h2>
+      <h2>Shot Analysis</h2>
       <div className="division" />
       
-      <div className="statisticsItem">
-        <div className="statisticsItemTitle">Overall Shooting Percentage</div>
-        <div className="statisticsItemValue">
-          <div className="shootingPercentage">
-            <div className="number">
-              {calculatePercentage(makes, attempts).toFixed(1)}
-              <span className="percentage">%</span>
+      <div className="stats-container">
+        {statItems.map((item, index) => (
+          <div key={index} className={`statisticsItem ${item.className}`}>
+            <div className="statisticsItemTitle">{item.title}</div>
+            <div className="statisticsItemValue">
+              <div className="shootingPercentage">
+                <div className="number">
+                  {calculatePercentage(item.makes, item.attempts).toFixed(1)}
+                  <span className="percentage">%</span>
+                </div>
+              </div>
+              <div className="verticalDivider" />
+              <div className="detailedShots">
+                <div className="totalShots">
+                  <div className="shotNumber">{item.attempts}</div>
+                  <div className="shotLabel">SHOTS</div>
+                </div>
+                <div className="shotAttempts">
+                  {`${item.makes}/${item.attempts}`}
+                </div>
+              </div>
             </div>
           </div>
-          <div className="verticalDivider" />
-          <div className="detailedShots">
-            <div className="totalShots">
-              <div className="shotNumber">{attempts}</div>
-              <div>&nbsp;SHOTS</div>
-            </div>
-            <div className="shotAttempts">
-              {`${makes}/${attempts}`}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="statisticsItem">
-        <div className="statisticsItemTitle">Uncontested</div>
-        <div className="statisticsItemValue">
-          <div className="shootingPercentage">
-            <div className="number">
-              {calculatePercentage(made_uncontested, totalUncontested).toFixed(1)}
-              <span className="percentage">%</span>
-            </div>
-          </div>
-          <div className="verticalDivider" />
-          <div className="detailedShots">
-            <div className="totalShots">
-              <div className="shotNumber">{totalUncontested}</div>
-              <div>&nbsp;SHOTS</div>
-            </div>
-            <div className="shotAttempts">
-              {`${made_uncontested}/${totalUncontested}`}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="statisticsItem">
-        <div className="statisticsItemTitle">Contested</div>
-        <div className="statisticsItemValue">
-          <div className="shootingPercentage">
-            <div className="number">
-              {calculatePercentage(made_contested, totalContested).toFixed(1)}
-              <span className="percentage">%</span>
-            </div>
-          </div>
-          <div className="verticalDivider" />
-          <div className="detailedShots">
-            <div className="totalShots">
-              <div className="shotNumber">{totalContested}</div>
-              <div>&nbsp;SHOTS</div>
-            </div>
-            <div className="shotAttempts">
-              {`${made_contested}/${totalContested}`}
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
 
       {timestamps && video && (
-        <div className="export">
+        <div className="export-container">
           <Export timestamps={timestamps} video={video} />
         </div>
       )}
