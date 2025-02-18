@@ -258,3 +258,29 @@ def detect_score(ball_pos, hoop_pos, last_pos):
     return False
 
     
+def calculate_iou(box1, box2):
+    x1, y1, x2, y2 = box1
+    x1_, y1_, x2_, y2_ = box2
+
+    xi1 = max(x1, x1_)
+    yi1 = max(y1, y1_)
+    xi2 = min(x2, x2_)
+    yi2 = min(y2, y2_)
+
+    inter_area = max(0, xi2 - xi1) * max(0, yi2 - yi1)
+    box1_area = (x2 - x1) * (y2 - y1)
+    box2_area = (x2_ - x1_) * (y2_ - y1_)
+
+    union_area = box1_area + box2_area - inter_area
+
+    iou = inter_area / union_area
+    return iou
+
+def convert_yolo_bbox_to_xyxy(bbox, img_width, img_height):
+    x_center, y_center, width, height = bbox
+    x1 = int((x_center - width / 2) * img_width)
+    y1 = int((y_center - height / 2) * img_height)
+    x2 = int((x_center + width / 2) * img_width)
+    y2 = int((y_center + height / 2) * img_height)
+    return x1, y1, x2, y2
+

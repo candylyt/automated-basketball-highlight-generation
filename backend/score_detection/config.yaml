@@ -1,9 +1,11 @@
-weights_path: 'weights/20250115best.pt'
-classes: ['basketball', 'made', 'person', 'rim', 'shoot']
-input: 'uploads/nba1.mp4'
+weights_path: "weights/20250115best.pt"
+weights_path_shoot: "/home/fyp_gch6/candy/best_ba.pt"
+classes: ["basketball", "made", "person", "rim", "shoot"]
+input: "uploads/nba1.mp4"
 # input: 'uploads/amateur2.mp4'
 save_video: False
-output_path: 'output'
-upload_path: 'uploads'
+output_path: "output"
+upload_path: "uploads"
 output_width: 1280
 output_height: 720
+iou_threshold: 0.4
