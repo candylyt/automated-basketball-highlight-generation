@@ -39,9 +39,10 @@ function VideoDisplayPage() {
     }
   };
 
-  useEffect(() => {
-    const socket = io("http://127.0.0.1:5001");
+  const backendPort = process.env.REACT_APP_BACKEND_PORT;
 
+  useEffect(() => {
+    const socket = io(backendPort);
     // Connect to the WebSocket server
     console.log("useEffect");
 

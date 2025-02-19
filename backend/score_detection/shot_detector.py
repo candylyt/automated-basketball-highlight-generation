@@ -59,7 +59,8 @@ class ShotDetector:
         self.last_point_in_region = None
         
         self.screen_shot_count = 0
-        self.screen_shot = False
+        self.screenshot = env['screenshot']
+        self.screen_shot_moment = False
         self.screen_shot_path = env['screenshot_path']
         self.save = env['save_video']
         Path(self.screen_shot_path).mkdir(parents=True, exist_ok=True)
@@ -67,6 +68,10 @@ class ShotDetector:
         self.attempt_cooldown = 0
         self.timestamp = None
         self.ball_entered = False
+
+        self.MISS_ATTEMPT_COOLDOWN = int(self.frame_rate * 2.5)
+        self.MADE_ATTEMPT_COOLDOWN = int(self.frame_rate * 3)
+        self.ATTEMPT_DETECTION_INTERVAL = int(self.frame_rate * 0.3)
 
         self.output_width = env['output_width']
         self.output_height = env['output_height']
@@ -137,7 +142,7 @@ class ShotDetector:
 
                     if (conf > 0.4 and current_class == 'rim' and not self.rim_detected) or (conf > 0.4 and current_class == 'basketball' and not self.ball_detected):
 
-                        if self.show_vid or self.save or self.screen_shot:
+                        if self.show_vid or self.save or self.screenshot:
                             self.draw_bounding_box(current_class, conf, cls, x1, y1, x2, y2)
                         
                         if current_class == 'rim':
@@ -155,7 +160,7 @@ class ShotDetector:
             if self.attempt_cooldown > 0:
                 self.attempt_cooldown -= 1
 
-            if self.show_vid or self.save or self.screen_shot:
+            if self.show_vid or self.save or self.screenshot:
                 self.draw_overlay()
 
                 if self.show_vid:
@@ -164,9 +169,9 @@ class ShotDetector:
                     if cv2.waitKey(1) & 0xFF == ord('q'):  # higher waitKey slows video down, use 1 for webcam
                         break
 
-                if self.screen_shot:
+                if self.screen_shot_moment:
                     cv2.imwrite(f"{self.screen_shot_path}/{self.screen_shot_count}.png", self.frame)
-                    self.screen_shot = False
+                    self.screen_shot_moment = False
                     self.screen_shot_count += 1
 
                 if self.save:
@@ -290,8 +295,8 @@ class ShotDetector:
                     #     print("attempt made")
                         self.overlay_color = (0, 255, 0)
                         self.fade_counter = self.fade_frames
-                        self.attempt_cooldown = 200
-                        self.screen_shot = True
+                        self.attempt_cooldown = self.MADE_ATTEMPT_COOLDOWN
+                        self.screen_shot_moment = True
                         self.last_point_in_region = None
                         self.ball_entered = False
                         self.attempt_time = 0
@@ -301,15 +306,15 @@ class ShotDetector:
                 
 
                 else:
-                    if self.attempt_time >= 10:
+                    if self.attempt_time >= self.ATTEMPT_DETECTION_INTERVAL:
                         self.overlay_color = (0, 0, 255)
                         self.fade_counter = self.fade_frames
                         self.detect_callback(max(0, self.timestamp-3000), self.timestamp+2000, False)
                         print(f"[{str(timedelta(milliseconds=self.timestamp)).split('.')[0]}] Attempt made")
                         self.attempts += 1
                         
-                        self.attempt_cooldown = 75
-                        self.screen_shot = True
+                        self.attempt_cooldown = self.MISS_ATTEMPT_COOLDOWN
+                        self.screen_shot_moment = True
                         
                     
                     self.attempt_time = 0
