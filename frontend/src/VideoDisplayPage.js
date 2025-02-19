@@ -39,9 +39,10 @@ function VideoDisplayPage() {
     }
   };
 
-  const socket = io("http://127.0.0.1:5001");
+  const backendPort = process.env.REACT_APP_BACKEND_PORT;
 
   useEffect(() => {
+    const socket = io(backendPort);
     // Connect to the WebSocket server
     console.log("useEffect");
 
@@ -75,13 +76,14 @@ function VideoDisplayPage() {
     socket.on("processing_complete", (data) => {
       console.log("Processing complete:", data);
       setStatistics(data);
+      socket.disconnect();
     });
 
     // Handle connection errors
     socket.on("connect_error", (error) => {
       console.error("Connection error:", error);
     });
-  }, [socket]);
+  }, []);
 
   return (
     <div className="VD-background">

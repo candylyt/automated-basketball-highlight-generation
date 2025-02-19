@@ -6,6 +6,7 @@ import { FileUploader } from "react-drag-drop-files";
 import "./VideoUpload.css";
 
 const fileTypes = ["MP4"];
+const backendPort = process.env.REACT_APP_BACKEND_PORT;
 
 function VideoUpload({ setFile }) {
   const handleChange = async (file) => {
@@ -14,7 +15,7 @@ function VideoUpload({ setFile }) {
     const formData = new FormData();
     formData.append("video", file);
     try {
-      const response = await fetch("http://127.0.0.1:5001/upload", {
+      const response = await fetch(`${backendPort}/upload`, {
         method: "POST",
         body: formData,
       });

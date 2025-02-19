@@ -86,4 +86,4 @@ def generate_report():
 
 
 if __name__ == "__main__":
-    socketio.run(app, debug=True, port=5001)
+    socketio.run(app, debug=True, port=env['flask_port'])

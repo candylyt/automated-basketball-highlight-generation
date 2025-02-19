@@ -11,6 +11,8 @@ import "./Export.css";
 
 Modal.setAppElement("#root"); // Set the root element for accessibility
 
+const backendPort = process.env.REACT_APP_BACKEND_PORT;
+
 const Export = ({ timestamps, video }) => {
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [selectedTimestamps, setSelectedTimestamps] = useState([]);
@@ -113,7 +115,7 @@ const Export = ({ timestamps, video }) => {
 
   const handleDownload = async () => {
     try {
-      const response = await fetch("http://127.0.0.1:5001/generate-report", {
+      const response = await fetch(`${backendPort}/generate-report`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
