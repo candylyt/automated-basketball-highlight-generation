@@ -8,8 +8,9 @@ import "./VideoUpload.css";
 const fileTypes = ["MP4"];
 const backendPort = process.env.REACT_APP_BACKEND_PORT;
 
-function VideoUpload({ setFile }) {
+function VideoUpload({ setFile, setIsUploading, setIsProcessing }) {
   const handleChange = async (file) => {
+    setIsUploading(true);
     setFile(file);
 
     const formData = new FormData();
@@ -23,11 +24,15 @@ function VideoUpload({ setFile }) {
       if (response.ok) {
         const data = await response.json();
         console.log("File uploaded successfully:", data);
+        setIsUploading(false);
+        setIsProcessing(true);
       } else {
         console.error("File upload failed:", response.statusText);
+        setIsUploading(false);
       }
     } catch (error) {
       console.error("Error uploading file:", error);
+      setIsUploading(false);
     }
   };
 

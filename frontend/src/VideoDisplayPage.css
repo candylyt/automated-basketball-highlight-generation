@@ -11,6 +11,39 @@
   height: 75vh;
   box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
   margin-left: 3vw;
+  position: relative;
+}
+
+.VD-loading {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  align-content: center;
+}
+
+.VD-overlay {
+  width: 100%;
+  height: 100%;
+  background: lightgray;
+  opacity: 50%;
+}
+
+.VD-uploading {
+  font-size: calc(10px + 2vmin);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: center;
+  color: black;
+  background-color: lightblue;
+  width: 30%;
+  height: 10%;
+  padding: 10px;
+  border-radius: 5px;
+  position: absolute;
+  top: 40%;
+  left: 35%;
 }
 
 .VD-videoContainer video {

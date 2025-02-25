@@ -4,19 +4,20 @@ import io from "socket.io-client";
 import Header from "./components/Header";
 import "./VideoDisplayPage.css";
 import Statistics from "./components/Statistics";
+import {
+  convertTimestampToSeconds,
+  convertMillisecondsToTimestamp,
+} from "./components/utils";
+import Spinner from "react-bootstrap/Spinner";
 
-function VideoDisplayPage() {
+function VideoDisplayPage({ isUploading, isProcessing, setIsProcessing }) {
   const location = useLocation();
   const { file } = location.state || {};
 
   const [timestamps, setTimestamps] = useState([]);
   const [statistics, setStatistics] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
-
-  const convertTimestampToSeconds = (timestamp) => {
-    const [minutes, seconds] = timestamp.split(":");
-    return parseInt(minutes) * 60 + parseInt(seconds);
-  };
+  // const [isProcessing, setIsProcessing] = useState(false);
 
   const handleTimestampClick = (timestamp) => {
     const seconds = convertTimestampToSeconds(timestamp);
@@ -25,26 +26,11 @@ function VideoDisplayPage() {
     video.play();
   };
 
-  const convertMillisecondsToTimestamp = (milliseconds) => {
-    const totalSeconds = Math.floor(milliseconds / 1000);
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
-
-    const pad = (num) => String(num).padStart(2, "0");
-    if (hours > 0) {
-      return `${hours}:${pad(minutes)}:${pad(seconds)}`;
-    } else {
-      return `${minutes}:${pad(seconds)}`;
-    }
-  };
-
   const backendPort = process.env.REACT_APP_BACKEND_PORT;
 
   useEffect(() => {
-    const socket = io(backendPort);
     // Connect to the WebSocket server
-    console.log("useEffect");
+    const socket = io(backendPort);
 
     // Handle connection and disconnection events
     socket.on("connect", () => {
@@ -59,6 +45,8 @@ function VideoDisplayPage() {
 
     // Listen for the 'shooting_detected' event
     socket.on("shooting_detected", (data) => {
+      // processing == false after the first shooting_detected event
+      setIsProcessing(false);
       console.log("Shooting detected:", data);
 
       if (data.success) {
@@ -108,6 +96,21 @@ function VideoDisplayPage() {
                 </div>
               ))}
             </div>
+            {isUploading && (
+              <div className="VD-loading">
+                <div className="VD-overlay" />
+                <div className="VD-uploading">
+                  Uploading Video...
+                  <Spinner animation="border" variant="primary" />
+                </div>
+              </div>
+            )}
+            {isProcessing && (
+              <div className="VD-loading">
+                <div className="VD-overlay" />
+                <div className="VD-uploading">Processing Video...</div>
+              </div>
+            )}
           </div>
           <Statistics data={statistics} timestamps={timestamps} video={file} />
         </div>

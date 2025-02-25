@@ -29,3 +29,8 @@ export const convertTimestampToMilliseconds = (timestamp) => {
 
   return milliseconds;
 };
+
+export const convertTimestampToSeconds = (timestamp) => {
+  const [minutes, seconds] = timestamp.split(":");
+  return parseInt(minutes) * 60 + parseInt(seconds);
+};

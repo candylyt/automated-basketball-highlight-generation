@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import VideoUpload from "./components/VideoUpload";
 import "./HomePage.css";
 
-function Home() {
+function Home({ setIsUploading, setIsProcessing }) {
   const navigate = useNavigate();
   const [file, setFile] = useState(null);
 
@@ -20,7 +20,11 @@ function Home() {
         Automatically and efficiently generate scoring highlights and shooting
         statistics with precision
       </div>
-      <VideoUpload setFile={setFile} />
+      <VideoUpload
+        setFile={setFile}
+        setIsUploading={setIsUploading}
+        setIsProcessing={setIsProcessing}
+      />
     </div>
   );
 }
