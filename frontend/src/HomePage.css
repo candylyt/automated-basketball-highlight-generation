@@ -1,11 +1,11 @@
-.Home {
+.HomePage {
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-.Home-header {
+.HomePage-header {
   min-height: 15vh;
   display: flex;
   flex-direction: column;
@@ -16,7 +16,7 @@
   font-weight: bold;
 }
 
-.Home-description {
+.HomePage-description {
   min-height: 10vh;
   min-width: 10vw;
   max-width: 65vw;

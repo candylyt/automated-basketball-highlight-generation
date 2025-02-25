@@ -106,3 +106,57 @@
   border-radius: 5px;
   text-align: center;
 }
+
+.VD-spinner {
+  width: 36px;
+  height: 36px;
+  border: 10px solid #f3f3f3;
+  border-top: 10px solid black;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.VD-spinner-square {
+  width: 48px;
+  height: 48px;
+  position: relative;
+}
+
+.VD-spinner-square::before,
+.VD-spinner-square::after {
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: black;
+  animation: squares 1s infinite;
+}
+
+.VD-spinner-square::after {
+  animation-delay: 0.5s;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes squares {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(28px, 0) rotate(90deg);
+  }
+  50% {
+    transform: translate(28px, 28px) rotate(180deg);
+  }
+  75% {
+    transform: translate(0, 28px) rotate(270deg);
+  }
+}

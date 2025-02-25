@@ -14,9 +14,9 @@ function Home({ setIsUploading, setIsProcessing }) {
   }, [file, navigate]);
 
   return (
-    <div className="Home">
-      <header className="Home-header">Basketball Highlights Generation</header>
-      <div className="Home-description">
+    <div className="HomePage">
+      <div className="HomePage-header">Basketball Highlights Generation</div>
+      <div className="HomePage-description">
         Automatically and efficiently generate scoring highlights and shooting
         statistics with precision
       </div>

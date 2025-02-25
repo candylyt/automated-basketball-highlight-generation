@@ -4,7 +4,7 @@ import HomePage from "./HomePage";
 import VideoDisplayPage from "./VideoDisplayPage";
 
 function App() {
-  const [isUploading, setIsUploading] = useState(true);
+  const [isUploading, setIsUploading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   return (
     <Router>

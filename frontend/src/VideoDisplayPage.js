@@ -8,7 +8,6 @@ import {
   convertTimestampToSeconds,
   convertMillisecondsToTimestamp,
 } from "./components/utils";
-import Spinner from "react-bootstrap/Spinner";
 
 function VideoDisplayPage({ isUploading, isProcessing, setIsProcessing }) {
   const location = useLocation();
@@ -100,15 +99,18 @@ function VideoDisplayPage({ isUploading, isProcessing, setIsProcessing }) {
               <div className="VD-loading">
                 <div className="VD-overlay" />
                 <div className="VD-uploading">
-                  Uploading Video...
-                  <Spinner animation="border" variant="primary" />
+                  Uploading Video &nbsp;
+                  <div className="VD-spinner" />
                 </div>
               </div>
             )}
             {isProcessing && (
               <div className="VD-loading">
                 <div className="VD-overlay" />
-                <div className="VD-uploading">Processing Video...</div>
+                <div className="VD-uploading">
+                  Processing Video &nbsp;
+                  <div className="VD-spinner-square" />
+                </div>
               </div>
             )}
           </div>
