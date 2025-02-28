@@ -37,6 +37,8 @@ def process_video(video_path):
 def upload_video():
     print('upload_video')
     file = request.files['video']
+    is_match = request.form.get('isMatch')
+    
     video_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
     file.save(video_path)
 

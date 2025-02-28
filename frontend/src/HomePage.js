@@ -6,12 +6,13 @@ import "./HomePage.css";
 function Home({ setIsUploading, setIsProcessing }) {
   const navigate = useNavigate();
   const [file, setFile] = useState(null);
+  const [videoData, setVideoData] = useState(null);
 
   useEffect(() => {
-    if (file) {
+    if (videoData) {
       navigate("/video", { state: { file } });
     }
-  }, [file, navigate]);
+  }, [videoData, navigate]);
 
   return (
     <div className="HomePage">
@@ -21,9 +22,11 @@ function Home({ setIsUploading, setIsProcessing }) {
         statistics with precision
       </div>
       <VideoUpload
+        file={file}
         setFile={setFile}
         setIsUploading={setIsUploading}
         setIsProcessing={setIsProcessing}
+        setVideoData={setVideoData}
       />
     </div>
   );
