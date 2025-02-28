@@ -1,7 +1,7 @@
 .statistics {
   box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
   width: 20vw;
-  height: 75vh;
+  margin-bottom: 2%;
   margin-left: 3vw;
   display: flex;
   flex-direction: column;
