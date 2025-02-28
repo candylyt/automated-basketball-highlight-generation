@@ -1,17 +1,18 @@
 .VD-background {
   display: flex;
   flex-direction: column;
-  margin-top: 10px;
 }
 
 .VD-videoContainer {
   display: flex;
   flex-direction: column;
   width: 65vw;
-  height: 75vh;
+  /* height: 75vh; */
   box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
   margin-left: 3vw;
   position: relative;
+  padding-bottom: 2%;
+  margin-bottom: 2%;
 }
 
 .VD-loading {
@@ -50,14 +51,14 @@
   display: flex;
   align-self: center;
   width: 90%;
-  height: 75%;
   margin-top: 5%;
+  margin-bottom: 2%;
 }
 
 .VD-container {
   display: flex;
   flex-direction: row;
-  margin-top: 3vh;
+  /* margin-top: 3vh; */
 }
 
 .VD-timestampTitle {
@@ -74,7 +75,7 @@
   margin-left: 5%;
 }
 
-.VD-timestamp {
+.VD-scoringTimestamp {
   width: 5vw;
   height: 4vh;
   background-color: green;
@@ -88,7 +89,25 @@
   cursor: pointer;
 }
 
-.VD-timestamp:hover {
+.VD-scoringTimestamp:hover {
+  background-color: #c2bbbb;
+}
+
+.VD-shootingTimestamp {
+  width: 5vw;
+  height: 4vh;
+  background-color: red;
+  color: white;
+  border-radius: 10px;
+  margin-right: 3%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.VD-shootingTimestamp:hover {
   background-color: #c2bbbb;
 }
 

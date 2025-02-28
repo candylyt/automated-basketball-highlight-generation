@@ -13,7 +13,8 @@ function VideoDisplayPage({ isUploading, isProcessing, setIsProcessing }) {
   const location = useLocation();
   const { file } = location.state || {};
 
-  const [timestamps, setTimestamps] = useState([]);
+  const [scoringTimestamps, setScoringTimestamps] = useState([]);
+  const [shootingTimestamps, setShootingTimestamps] = useState([]);
   const [statistics, setStatistics] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
   // const [isProcessing, setIsProcessing] = useState(false);
@@ -48,9 +49,17 @@ function VideoDisplayPage({ isUploading, isProcessing, setIsProcessing }) {
       setIsProcessing(false);
       console.log("Shooting detected:", data);
 
+      const timestamp = convertMillisecondsToTimestamp(data.start_time);
+
       if (data.success) {
-        const timestamp = convertMillisecondsToTimestamp(data.start_time);
-        setTimestamps((prevTimestamps) => {
+        setScoringTimestamps((prevTimestamps) => {
+          if (!prevTimestamps.includes(timestamp)) {
+            return [...prevTimestamps, timestamp];
+          }
+          return prevTimestamps;
+        });
+      } else {
+        setShootingTimestamps((prevTimestamps) => {
           if (!prevTimestamps.includes(timestamp)) {
             return [...prevTimestamps, timestamp];
           }
@@ -83,10 +92,24 @@ function VideoDisplayPage({ isUploading, isProcessing, setIsProcessing }) {
             </video>
             <div className="VD-timestampTitle">Scoring Moment Timestamps</div>
             <div className="VD-timestampsContainer">
-              {timestamps.map((timestamp, index) => (
+              {scoringTimestamps.map((timestamp, index) => (
                 <div
                   key={index}
-                  className="VD-timestamp"
+                  className="VD-scoringTimestamp"
+                  onClick={() => {
+                    handleTimestampClick(timestamp);
+                  }}
+                >
+                  {timestamp}
+                </div>
+              ))}
+            </div>
+            <div className="VD-timestampTitle">Shooting Moment Timestamps</div>
+            <div className="VD-timestampsContainer">
+              {shootingTimestamps.map((timestamp, index) => (
+                <div
+                  key={index}
+                  className="VD-shootingTimestamp"
                   onClick={() => {
                     handleTimestampClick(timestamp);
                   }}
@@ -114,7 +137,11 @@ function VideoDisplayPage({ isUploading, isProcessing, setIsProcessing }) {
               </div>
             )}
           </div>
-          <Statistics data={statistics} timestamps={timestamps} video={file} />
+          <Statistics
+            data={statistics}
+            timestamps={scoringTimestamps}
+            video={file}
+          />
         </div>
       ) : (
         <div className="VD-error">
