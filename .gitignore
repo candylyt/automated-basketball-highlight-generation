@@ -5,3 +5,4 @@ backend/score_detection/uploads/*
 backend/score_detection/weights/*
 backend/score_detection/config.*
 backend/score_detection/screenshots/*
+
