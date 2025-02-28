@@ -17,7 +17,6 @@ function VideoDisplayPage({ isUploading, isProcessing, setIsProcessing }) {
   const [shootingTimestamps, setShootingTimestamps] = useState([]);
   const [statistics, setStatistics] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
-  // const [isProcessing, setIsProcessing] = useState(false);
 
   const handleTimestampClick = (timestamp) => {
     const seconds = convertTimestampToSeconds(timestamp);

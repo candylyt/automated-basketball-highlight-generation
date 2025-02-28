@@ -10,6 +10,7 @@
   padding: 30px;
   border-radius: 8px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  max-width: 35vw;
 }
 
 .Question-overlay {
@@ -62,9 +63,54 @@ button {
   border-radius: 4px;
   cursor: pointer;
   justify-self: center;
-  margin-top: 20px !important;
 }
 
 button:hover {
   background-color: #0056b3;
+}
+
+.Question-error {
+  color: red;
+  display: flex;
+  justify-self: center;
+  margin-bottom: 20px;
+}
+
+.Question-quarters {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  margin-top: 1.2vh;
+}
+
+.Question-quarterGroup {
+  display: flex;
+  flex-direction: row;
+
+  margin-bottom: 15px;
+  margin-left: 15px;
+  align-items: center;
+}
+
+.Question-quarter {
+  width: 50% !important;
+  height: 40px;
+}
+
+.Question-switchTimestamp {
+  margin-left: 15px;
+  width: 50% !important;
+}
+
+.Question-delete {
+  background-color: red;
+}
+
+.Question-delete:hover {
+  background-color: darkred;
+}
+
+.Question-buttonContainer {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
 }

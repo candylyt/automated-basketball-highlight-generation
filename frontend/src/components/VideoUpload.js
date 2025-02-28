@@ -24,13 +24,17 @@ function VideoUpload({
     setIsModalOpen(true);
   };
 
-  const handleModalSubmit = async (data) => {
-    setVideoData(data);
+  const handleModalSubmit = async (videoData) => {
+    setVideoData(videoData);
     setIsModalOpen(false);
 
     const formData = new FormData();
     formData.append("video", file);
-    formData.append("isMatch", data.isMatch);
+    formData.append("isMatch", videoData.isMatch);
+    formData.append("isSwitched", videoData.isSwitched);
+    formData.append("switchTimestamp", videoData.switchTimestamp);
+    formData.append("quarterTimestamps", videoData.quarterTimestamps);
+
     try {
       const response = await fetch(`${backendPort}/upload`, {
         method: "POST",
