@@ -9,7 +9,12 @@ import {
   convertMillisecondsToTimestamp,
 } from "./components/utils";
 
-function VideoDisplayPage({ isUploading, isProcessing, setIsProcessing }) {
+function VideoDisplayPage({
+  videoData,
+  isUploading,
+  isProcessing,
+  setIsProcessing,
+}) {
   const location = useLocation();
   const { file } = location.state || {};
 
@@ -138,6 +143,7 @@ function VideoDisplayPage({ isUploading, isProcessing, setIsProcessing }) {
           </div>
           <Statistics
             data={statistics}
+            videoData={videoData}
             timestamps={scoringTimestamps}
             video={file}
           />

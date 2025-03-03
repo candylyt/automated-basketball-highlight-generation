@@ -26,6 +26,39 @@
   margin-bottom: 20px;
 }
 
+.statisticsTeams {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  justify-content: space-around;
+  font-weight: 500;
+  font-size: calc(5px + 2vmin);
+  margin-bottom: 20px;
+}
+
+.teamSelected {
+  width: auto;
+  height: auto;
+  background-color: lightblue;
+  border-radius: 5px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  padding-left: 10px;
+  padding-right: 10px;
+  cursor: pointer;
+}
+
+.teamUnselected {
+  width: auto;
+  height: auto;
+  border-radius: 5px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  padding-left: 10px;
+  padding-right: 10px;
+  cursor: pointer;
+}
+
 .statisticsItem {
   display: flex;
   flex-direction: column;

@@ -38,7 +38,8 @@ function Questions({ isOpen, onRequestClose, onSubmit }) {
     }
 
     for (const timestamp of quarterTimestamps) {
-      if (!validateTimestamp(timestamp)) {
+      console.log(timestamp);
+      if (timestamp != "" && !validateTimestamp(timestamp)) {
         setError(
           "Please enter valid timestamps for all quarters in hh:mm:ss or mm:ss format!"
         );
@@ -131,7 +132,7 @@ function Questions({ isOpen, onRequestClose, onSubmit }) {
         <div className="Question-formGroup">
           <label>
             {`${
-              isSwitched == true ? "4." : "3."
+              isSwitched === true ? "4." : "3."
             } Please indicate the timestamp for each quarter (if any).`}
           </label>
           <div className="Question-quarters">

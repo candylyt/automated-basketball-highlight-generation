@@ -3,10 +3,10 @@ import { useNavigate } from "react-router-dom";
 import VideoUpload from "./components/VideoUpload";
 import "./HomePage.css";
 
-function Home({ setIsUploading, setIsProcessing }) {
+function Home({ videoData, setVideoData, setIsUploading, setIsProcessing }) {
   const navigate = useNavigate();
   const [file, setFile] = useState(null);
-  const [videoData, setVideoData] = useState(null);
+  // const [videoData, setVideoData] = useState(null);
 
   useEffect(() => {
     if (videoData) {

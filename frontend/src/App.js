@@ -6,6 +6,8 @@ import VideoDisplayPage from "./VideoDisplayPage";
 function App() {
   const [isUploading, setIsUploading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [videoData, setVideoData] = useState(null);
+
   return (
     <Router>
       <Routes>
@@ -14,6 +16,8 @@ function App() {
           path="/"
           element={
             <HomePage
+              videoData={videoData}
+              setVideoData={setVideoData}
               setIsUploading={setIsUploading}
               setIsProcessing={setIsProcessing}
             />
@@ -23,6 +27,7 @@ function App() {
           path="/video"
           element={
             <VideoDisplayPage
+              videoData={videoData}
               isUploading={isUploading}
               isProcessing={isProcessing}
               setIsProcessing={setIsProcessing}
