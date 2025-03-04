@@ -19,7 +19,22 @@ function VideoDisplayPage({
   const { file } = location.state || {};
 
   const [scoringTimestamps, setScoringTimestamps] = useState([]);
-  const [shootingTimestamps, setShootingTimestamps] = useState([]);
+  // const [shootingTimestamps, setShootingTimestamps] = useState([]);
+  const [shootingTimestamps, setShootingTimestamps] = useState([
+    "00:00",
+    "00:00",
+    "00:00",
+    "00:00",
+    "00:00",
+    "00:00",
+    "00:00",
+    "00:00",
+    "00:00",
+    "00:00",
+    "00:00",
+    "00:00",
+    "00:00",
+  ]);
 
   const [statistics, setStatistics] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -29,6 +44,10 @@ function VideoDisplayPage({
     const video = document.querySelector("video");
     video.currentTime = seconds;
     video.play();
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   };
 
   const backendPort = process.env.REACT_APP_BACKEND_PORT;
