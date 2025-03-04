@@ -2,12 +2,15 @@ import React, { useEffect, useState } from "react";
 import { useLocation, Link } from "react-router-dom";
 import io from "socket.io-client";
 import Header from "./components/Header";
+import Modal from "react-modal";
 import "./VideoDisplayPage.css";
 import Statistics from "./components/Statistics";
 import {
   convertTimestampToSeconds,
   convertMillisecondsToTimestamp,
 } from "./components/utils";
+
+Modal.setAppElement("#root");
 
 function VideoDisplayPage({
   videoData,
@@ -19,25 +22,10 @@ function VideoDisplayPage({
   const { file } = location.state || {};
 
   const [scoringTimestamps, setScoringTimestamps] = useState([]);
-  // const [shootingTimestamps, setShootingTimestamps] = useState([]);
-  const [shootingTimestamps, setShootingTimestamps] = useState([
-    "00:00",
-    "00:00",
-    "00:00",
-    "00:00",
-    "00:00",
-    "00:00",
-    "00:00",
-    "00:00",
-    "00:00",
-    "00:00",
-    "00:00",
-    "00:00",
-    "00:00",
-  ]);
-
+  const [shootingTimestamps, setShootingTimestamps] = useState([]);
   const [statistics, setStatistics] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleTimestampClick = (timestamp) => {
     const seconds = convertTimestampToSeconds(timestamp);
@@ -48,6 +36,10 @@ function VideoDisplayPage({
       top: 0,
       behavior: "smooth",
     });
+  };
+
+  const handleReturnHome = () => {
+    window.location.href = "/";
   };
 
   const backendPort = process.env.REACT_APP_BACKEND_PORT;
@@ -96,6 +88,7 @@ function VideoDisplayPage({
     socket.on("processing_complete", (data) => {
       console.log("Processing complete:", data);
       setStatistics(data);
+      setIsModalOpen(true);
       socket.disconnect();
     });
 
@@ -104,6 +97,10 @@ function VideoDisplayPage({
       console.error("Connection error:", error);
     });
   }, []);
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
 
   return (
     <div className="VD-background">
@@ -223,11 +220,29 @@ function VideoDisplayPage({
             timestamps={scoringTimestamps}
             video={file}
           />
+          <Modal
+            isOpen={isModalOpen}
+            onRequestClose={closeModal}
+            contentLabel="Processing Complete"
+            className="VD-modal"
+          >
+            <div className="VD-modalContent">
+              <h2>Processing Complete</h2>
+              <p>
+                All scoring and shooting moments have been identified. You can
+                now export the highlight videos and statistics.
+              </p>
+              <button onClick={closeModal}>Close</button>
+            </div>
+          </Modal>
         </div>
       ) : (
         <div className="VD-error">
           Error: No video file has been uploaded. Return to &nbsp;
-          <Link to="/">Home Page</Link>.
+          <div className="VD-hpButton" onClick={handleReturnHome}>
+            Home Page
+          </div>
+          .
         </div>
       )}
     </div>
