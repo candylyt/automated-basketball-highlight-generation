@@ -13,6 +13,7 @@
   position: relative;
   padding-bottom: 2%;
   margin-bottom: 2%;
+  /* align-items: center; */
 }
 
 .VD-loading {
@@ -69,15 +70,51 @@
   margin-bottom: 1%;
 }
 
+.VD-timestampTeamTitle {
+  font-weight: 600;
+  font-size: calc(10px + 2vmin);
+  margin-left: 5%;
+  margin-top: 1%;
+  margin-bottom: 1%;
+  text-decoration: underline;
+}
+
+.VD-timestamps {
+  display: flex;
+  flex-direction: row;
+  width: 95%;
+  margin-left: 3%;
+}
+
+.VD-timestampsTeam {
+  display: flex;
+  flex-direction: column;
+  width: 50%;
+}
+
+.VD-timestampsNoTeam {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-left: -3%;
+}
+
 .VD-timestampsContainer {
   display: flex;
   flex-direction: row;
   margin-left: 5%;
+  flex-wrap: wrap;
+  row-gap: 1rem;
+  margin-bottom: 20px;
 }
 
 .VD-scoringTimestamp {
   width: 5vw;
   height: 4vh;
+  max-height: 150px;
+  min-height: 30px;
+  max-width: 200px;
+  min-width: 50px;
   background-color: green;
   color: white;
   border-radius: 10px;
@@ -96,6 +133,10 @@
 .VD-shootingTimestamp {
   width: 5vw;
   height: 4vh;
+  max-height: 150px;
+  min-height: 30px;
+  max-width: 200px;
+  min-width: 50px;
   background-color: red;
   color: white;
   border-radius: 10px;

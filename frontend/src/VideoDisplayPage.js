@@ -20,6 +20,7 @@ function VideoDisplayPage({
 
   const [scoringTimestamps, setScoringTimestamps] = useState([]);
   const [shootingTimestamps, setShootingTimestamps] = useState([]);
+
   const [statistics, setStatistics] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
 
@@ -94,34 +95,90 @@ function VideoDisplayPage({
             <video controls>
               <source src={URL.createObjectURL(file)} type={file.type} />
             </video>
-            <div className="VD-timestampTitle">Scoring Moment Timestamps</div>
-            <div className="VD-timestampsContainer">
-              {scoringTimestamps.map((timestamp, index) => (
-                <div
-                  key={index}
-                  className="VD-scoringTimestamp"
-                  onClick={() => {
-                    handleTimestampClick(timestamp);
-                  }}
-                >
-                  {timestamp}
+            <div className="VD-timestamps">
+              <div
+                className={
+                  videoData.isMatch
+                    ? "VD-timestampsTeam"
+                    : "VD-timestampsNoTeam"
+                }
+              >
+                {videoData.isMatch && (
+                  <div className="VD-timestampTeamTitle">Team A</div>
+                )}
+                <div className="VD-timestampTitle">
+                  Scoring Moment Timestamps
                 </div>
-              ))}
-            </div>
-            <div className="VD-timestampTitle">Shooting Moment Timestamps</div>
-            <div className="VD-timestampsContainer">
-              {shootingTimestamps.map((timestamp, index) => (
-                <div
-                  key={index}
-                  className="VD-shootingTimestamp"
-                  onClick={() => {
-                    handleTimestampClick(timestamp);
-                  }}
-                >
-                  {timestamp}
+                <div className="VD-timestampsContainer">
+                  {scoringTimestamps.map((timestamp, index) => (
+                    <div
+                      key={index}
+                      className="VD-scoringTimestamp"
+                      onClick={() => {
+                        handleTimestampClick(timestamp);
+                      }}
+                    >
+                      {timestamp}
+                    </div>
+                  ))}
                 </div>
-              ))}
+                <div className="VD-timestampTitle">
+                  Shooting Moment Timestamps
+                </div>
+                <div className="VD-timestampsContainer">
+                  {shootingTimestamps.map((timestamp, index) => (
+                    <div
+                      key={index}
+                      className="VD-shootingTimestamp"
+                      onClick={() => {
+                        handleTimestampClick(timestamp);
+                      }}
+                    >
+                      {timestamp}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {videoData.isMatch && (
+                <div className="VD-timestampsTeam">
+                  <div className="VD-timestampTeamTitle">Team B</div>
+
+                  <div className="VD-timestampTitle">
+                    Scoring Moment Timestamps
+                  </div>
+                  <div className="VD-timestampsContainer">
+                    {scoringTimestamps.map((timestamp, index) => (
+                      <div
+                        key={index}
+                        className="VD-scoringTimestamp"
+                        onClick={() => {
+                          handleTimestampClick(timestamp);
+                        }}
+                      >
+                        {timestamp}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="VD-timestampTitle">
+                    Shooting Moment Timestamps
+                  </div>
+                  <div className="VD-timestampsContainer">
+                    {shootingTimestamps.map((timestamp, index) => (
+                      <div
+                        key={index}
+                        className="VD-shootingTimestamp"
+                        onClick={() => {
+                          handleTimestampClick(timestamp);
+                        }}
+                      >
+                        {timestamp}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
+
             {isUploading && (
               <div className="VD-loading">
                 <div className="VD-overlay" />
