@@ -10,7 +10,7 @@ import os, shutil
 import yaml
 import datetime
 from pathlib import Path
-from datetime import timedelta
+from datetime import timedelta, datetime
 import time
 from enum import Enum
 
@@ -18,8 +18,101 @@ from enum import Enum
 env = yaml.load(open('config.yaml', 'r'), Loader=yaml.SafeLoader)
 print("Environment variables: ", env)
 
+class ScoreCounter(object):
+    #Handles simple score and shooting counting
+    def __init__(self, quarters):
+        self.makes = [0]
+        self.attempts = [0]
+
+        self.quarters = quarters
+        self.current_quarter = 0
+
+    def set_quarter(self, timestamp):
+        if len(self.quarters) > 0 and self.current_quarter < len(self.quarters):
+            # Assuming all time stamps are formatted to hh:mm:ss, we can do direct string comparison
+            if timestamp > self.quarters[self.current_quarter]:
+                self.current_quarter += 1
+            
+                self.makes.append(0)
+                self.attempts.append(0)
+        
+    def make(self, timestamp, side):
+        self.set_quarter(timestamp)
+        self.makes[self.current_quarter] += 1
+        self.attempts[self.current_quarter] += 1
+
+    def attempt(self, timestamp, side):
+        self.set_quarter(timestamp)
+        self.attempts[self.current_quarter] += 1
+
+    def report(self):
+        return {
+            'makes' : self.makes,
+            'attempts' : self.attempts
+        }
+        
+
+
+class MatchScoreCounter(ScoreCounter):
+    #Handles match score and shooting counting with possible side switching
+    def __init__(self, quarters, is_switched, switch_time):
+        super().__init__(quarters)
+        self.team_A_attempts = [0]
+        self.team_B_attempts = [0]
+        self.team_A_makes = [0]
+        self.team_B_makes = [0]
+
+        self.switch_time = switch_time if is_switched else '99:99:99'
+        self.has_switched = False
+    
+    def set_quarter(self, timestamp):
+        if len(self.quarters) > 0 and self.current_quarter < len(self.quarters):
+            # Assuming all time stamps are formatted to hh:mm:ss, we can do direct string comparison
+            if timestamp > self.quarters[self.current_quarter]:
+                self.current_quarter += 1
+            
+                self.team_A_attempts.append(0)
+                self.team_B_attempts.append(0)
+                self.team_A_makes.append(0)
+                self.team_B_makes.append(0)
+
+    def attempt(self, timestamp, side):
+        self.set_quarter(timestamp)
+        
+        if (not self.has_switched) and (timestamp > self.switch_time):
+            self.has_switched = True
+        
+        if (side == 0 and not self.has_switched) or (side == 1 and self.has_switched):
+            self.team_A_attempts[self.current_quarter] += 1
+        else:
+            self.team_B_attempts[self.current_quarter] += 1
+
+    def make(self, timestamp, side):
+        self.set_quarter(timestamp)
+        
+        if (not self.has_switched) and (timestamp > self.switch_time):
+            self.has_switched = True
+            print("Side switched")
+        
+        if (side == 0 and not self.has_switched) or (side == 1 and self.has_switched):
+            self.team_A_attempts[self.current_quarter] += 1
+            self.team_A_makes[self.current_quarter] += 1
+        else:
+            self.team_B_attempts[self.current_quarter] += 1
+            self.team_B_makes[self.current_quarter] += 1
+
+    def report(self):
+        return {
+            "team_A_attempts": self.team_A_attempts,
+            "team_A_makes": self.team_A_makes,
+            "team_B_attempts": self.team_B_attempts,
+            "team_B_makes": self.team_B_makes,
+        }
+
+
+
 class ShotDetector:
-    def __init__(self, video_path, on_detect, on_complete, show_vid=False):
+    def __init__(self, video_path, on_detect, on_complete, show_vid=False, **kwargs):
         self.model = YOLO(env['weights_path'], verbose=False)
         self.class_names = env['classes']
         self.colors = [(0, 255, 0), (255, 255, 0), (255, 255, 255), (255, 0, 0), (0, 0, 255)]
@@ -48,6 +141,17 @@ class ShotDetector:
         self.attempt_cooldown = 0
         self.attempt_time = 0
 
+        quarters = kwargs.get('quarter_timestamps', [])
+        quarters = [i for i in quarters if i != '']
+        is_switched = kwargs.get('is_switched', False)
+        is_match = kwargs.get('is_match', False)
+        switch_time = kwargs.get('switch_time', '99:99:99')
+        
+        if not is_match:
+            self.score_counter = ScoreCounter(quarters)
+        else:
+            self.score_counter = MatchScoreCounter(quarters, is_switched, switch_time)
+
         # For marking if the ball / rim have been detected in the current frame
         self.ball_detected = False
         self.rim_detected = False
@@ -64,6 +168,8 @@ class ShotDetector:
         self.screen_shot_path = env['screenshot_path']
         self.save = env['save_video']
         Path(self.screen_shot_path).mkdir(parents=True, exist_ok=True)
+
+
 
         self.attempt_cooldown = 0
         self.timestamp = None
@@ -179,6 +285,9 @@ class ShotDetector:
 
 
         # Report score and cleanup upon finish
+        score_report = self.score_counter.report()
+        for k,v in score_report.items():
+            print(f"{k.ljust(16)} : {v}")
         self.on_complete(self.attempts, self.makes)
         self.cap.release()
         if self.show_vid:
@@ -286,10 +395,13 @@ class ShotDetector:
                     # self.frame = cv2.putText(self.frame, 'DOWN', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
                     if scored:
                         # print(self.ball_pos[-1], self.last_point_in_region, self.hoop_pos[-1])
+                        time_string = self.get_time_string()
                         self.makes += 1
                         self.attempts += 1
+                        side = self.get_side()
+                        self.score_counter.make(time_string, side)
                         self.detect_callback(max(0, self.timestamp-3000), self.timestamp+2000, True)
-                        print(f"[{str(timedelta(milliseconds=self.timestamp)).split('.')[0]}] Shot made")
+                        print(f"[{time_string}] {'Shot made'.ljust(13)} | Side {side}")
                     # else:
                     #     self.detect_callback(max(0, self.timestamp-3000), self.timestamp+2000, False)
                     #     print("attempt made")
@@ -307,10 +419,13 @@ class ShotDetector:
 
                 else:
                     if self.attempt_time >= self.ATTEMPT_DETECTION_INTERVAL:
+                        time_string = self.get_time_string()
                         self.overlay_color = (0, 0, 255)
                         self.fade_counter = self.fade_frames
+                        side = self.get_side()
+                        self.score_counter.attempt(time_string, side)
                         self.detect_callback(max(0, self.timestamp-3000), self.timestamp+2000, False)
-                        print(f"[{str(timedelta(milliseconds=self.timestamp)).split('.')[0]}] Attempt made")
+                        print(f"[{time_string}] {'Attempt made'.ljust(13)} | Side {side}")
                         self.attempts += 1
                         
                         self.attempt_cooldown = self.MISS_ATTEMPT_COOLDOWN
@@ -334,6 +449,16 @@ class ShotDetector:
             alpha = 0.2 * (self.fade_counter / self.fade_frames)
             self.frame = cv2.addWeighted(self.frame, 1 - alpha, np.full_like(self.frame, self.overlay_color), alpha, 0)
             self.fade_counter -= 1
+
+    def get_side(self):
+        if len(self.hoop_pos):
+            return 1 if self.hoop_pos[-1][0][0] > self.width/2 else 0
+
+        return None
+    
+    def get_time_string(self):
+        t = str(timedelta(milliseconds=self.timestamp)).split('.')[0]
+        return datetime.strptime(t, "%H:%M:%S").strftime('%H:%M:%S')
 
 
 if __name__ == "__main__":
