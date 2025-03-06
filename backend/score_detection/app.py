@@ -17,7 +17,7 @@ CORS(app)
 
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-def process_video(video_path):
+def process_video(video_path, score_team_args):
     def on_detection(start_time, end_time, success):
         socketio.emit('shooting_detected', {
             'start_time' : start_time,
@@ -31,23 +31,28 @@ def process_video(video_path):
             'makes' : makes
         })
 
-    ShotDetector(video_path, on_detection, on_complete, show_vid=False)
+    ShotDetector(video_path, on_detection, on_complete, show_vid=False, **score_team_args)
 
 @app.route('/upload' , methods=['POST'])
 def upload_video():
     print('upload_video')
 
     file = request.files['video']
-    is_match = request.form.get('isMatch')
-    is_switched = request.form.get('isSwitched')
-    switch_time = request.form.get('switchTimestamp')
-    quarter_timestamps = request.form.get('quarterTimestamps')
 
+    
+    score_team_args = {
+        "is_match" : request.form.get('isMatch') == 'true',
+        "is_switched" : request.form.get('isSwitched') == 'true',
+        "switch_time" : request.form.get('switchTimestamp'),
+        "quarter_timestamps" : request.form.get('quarterTimestamps').split(',')
+    }
+
+    print(score_team_args)
     
     video_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
     file.save(video_path)
 
-    thread = threading.Thread(target=process_video, args=(video_path, ))
+    thread = threading.Thread(target=process_video, args=(video_path, score_team_args))
     thread.daemon = True
     thread.start()
 
