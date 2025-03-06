@@ -1,30 +1,65 @@
 .VD-background {
   display: flex;
   flex-direction: column;
-  margin-top: 10px;
 }
 
 .VD-videoContainer {
   display: flex;
   flex-direction: column;
   width: 65vw;
-  height: 75vh;
+  /* height: 75vh; */
   box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
   margin-left: 3vw;
+  position: relative;
+  padding-bottom: 2%;
+  margin-bottom: 2%;
+  /* align-items: center; */
+}
+
+.VD-loading {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  align-content: center;
+}
+
+.VD-overlay {
+  width: 100%;
+  height: 100%;
+  background: lightgray;
+  opacity: 50%;
+}
+
+.VD-uploading {
+  font-size: calc(10px + 2vmin);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: center;
+  color: black;
+  background-color: lightblue;
+  width: 30%;
+  height: 10%;
+  padding: 10px;
+  border-radius: 5px;
+  position: absolute;
+  top: 40%;
+  left: 35%;
 }
 
 .VD-videoContainer video {
   display: flex;
   align-self: center;
   width: 90%;
-  height: 75%;
   margin-top: 5%;
+  margin-bottom: 2%;
 }
 
 .VD-container {
   display: flex;
   flex-direction: row;
-  margin-top: 3vh;
+  /* margin-top: 3vh; */
 }
 
 .VD-timestampTitle {
@@ -35,15 +70,51 @@
   margin-bottom: 1%;
 }
 
+.VD-timestampTeamTitle {
+  font-weight: 600;
+  font-size: calc(10px + 2vmin);
+  margin-left: 5%;
+  margin-top: 1%;
+  margin-bottom: 1%;
+  text-decoration: underline;
+}
+
+.VD-timestamps {
+  display: flex;
+  flex-direction: row;
+  width: 95%;
+  margin-left: 3%;
+}
+
+.VD-timestampsTeam {
+  display: flex;
+  flex-direction: column;
+  width: 50%;
+}
+
+.VD-timestampsNoTeam {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-left: -3%;
+}
+
 .VD-timestampsContainer {
   display: flex;
   flex-direction: row;
   margin-left: 5%;
+  flex-wrap: wrap;
+  row-gap: 1rem;
+  margin-bottom: 20px;
 }
 
-.VD-timestamp {
+.VD-scoringTimestamp {
   width: 5vw;
   height: 4vh;
+  max-height: 150px;
+  min-height: 30px;
+  max-width: 200px;
+  min-width: 50px;
   background-color: green;
   color: white;
   border-radius: 10px;
@@ -55,7 +126,29 @@
   cursor: pointer;
 }
 
-.VD-timestamp:hover {
+.VD-scoringTimestamp:hover {
+  background-color: #c2bbbb;
+}
+
+.VD-shootingTimestamp {
+  width: 5vw;
+  height: 4vh;
+  max-height: 150px;
+  min-height: 30px;
+  max-width: 200px;
+  min-width: 50px;
+  background-color: red;
+  color: white;
+  border-radius: 10px;
+  margin-right: 3%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.VD-shootingTimestamp:hover {
   background-color: #c2bbbb;
 }
 
@@ -72,4 +165,113 @@
   padding: 10px;
   border-radius: 5px;
   text-align: center;
+  align-items: center;
+}
+
+.VD-hpButton {
+  background-color: lightblue;
+  width: auto;
+  height: auto;
+  padding: 5px;
+  padding-left: 10px;
+  padding-right: 10px;
+  cursor: pointer;
+}
+
+.VD-spinner {
+  width: 36px;
+  height: 36px;
+  border: 10px solid #f3f3f3;
+  border-top: 10px solid black;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.VD-spinner-square {
+  width: 48px;
+  height: 48px;
+  position: relative;
+}
+
+.VD-spinner-square::before,
+.VD-spinner-square::after {
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: black;
+  animation: squares 1s infinite;
+}
+
+.VD-spinner-square::after {
+  animation-delay: 0.5s;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes squares {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(28px, 0) rotate(90deg);
+  }
+  50% {
+    transform: translate(28px, 28px) rotate(180deg);
+  }
+  75% {
+    transform: translate(0, 28px) rotate(270deg);
+  }
+}
+
+.VD-modal {
+  position: absolute;
+  top: 50%;
+  left: 38%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  max-width: 400px;
+  width: 80%;
+}
+
+.VD-modalContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.VD-modalContent h2 {
+  margin-bottom: 10px;
+}
+
+.VD-modalContent p {
+  font-size: large;
+  padding-left: 25px;
+  padding-right: 25px;
+  margin-bottom: 20px;
+}
+
+.VD-modalContent button {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.VD-modalContent button:hover {
+  background-color: #0056b3;
 }

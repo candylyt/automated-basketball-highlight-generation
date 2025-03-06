@@ -29,3 +29,14 @@ export const convertTimestampToMilliseconds = (timestamp) => {
 
   return milliseconds;
 };
+
+export const convertTimestampToSeconds = (timestamp) => {
+  const [minutes, seconds] = timestamp.split(":");
+  return parseInt(minutes) * 60 + parseInt(seconds);
+};
+
+export const validateTimestamp = (timestamp) => {
+  const hhmmssPattern = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/;
+  const mmssPattern = /^[0-5]?[0-9]:[0-5][0-9]$/;
+  return hhmmssPattern.test(timestamp) || mmssPattern.test(timestamp);
+};

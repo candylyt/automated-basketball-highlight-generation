@@ -2,49 +2,51 @@ import React, { useEffect, useState } from "react";
 import { useLocation, Link } from "react-router-dom";
 import io from "socket.io-client";
 import Header from "./components/Header";
+import Modal from "react-modal";
 import "./VideoDisplayPage.css";
 import Statistics from "./components/Statistics";
+import {
+  convertTimestampToSeconds,
+  convertMillisecondsToTimestamp,
+} from "./components/utils";
 
-function VideoDisplayPage() {
+Modal.setAppElement("#root");
+
+function VideoDisplayPage({
+  videoData,
+  isUploading,
+  isProcessing,
+  setIsProcessing,
+}) {
   const location = useLocation();
   const { file } = location.state || {};
 
-  const [timestamps, setTimestamps] = useState([]);
+  const [scoringTimestamps, setScoringTimestamps] = useState([]);
+  const [shootingTimestamps, setShootingTimestamps] = useState([]);
   const [statistics, setStatistics] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
-
-  const convertTimestampToSeconds = (timestamp) => {
-    const [minutes, seconds] = timestamp.split(":");
-    return parseInt(minutes) * 60 + parseInt(seconds);
-  };
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleTimestampClick = (timestamp) => {
     const seconds = convertTimestampToSeconds(timestamp);
     const video = document.querySelector("video");
     video.currentTime = seconds;
     video.play();
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   };
 
-  const convertMillisecondsToTimestamp = (milliseconds) => {
-    const totalSeconds = Math.floor(milliseconds / 1000);
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
-
-    const pad = (num) => String(num).padStart(2, "0");
-    if (hours > 0) {
-      return `${hours}:${pad(minutes)}:${pad(seconds)}`;
-    } else {
-      return `${minutes}:${pad(seconds)}`;
-    }
+  const handleReturnHome = () => {
+    window.location.href = "/";
   };
 
   const backendPort = process.env.REACT_APP_BACKEND_PORT;
 
   useEffect(() => {
-    const socket = io(backendPort);
     // Connect to the WebSocket server
-    console.log("useEffect");
+    const socket = io(backendPort);
 
     // Handle connection and disconnection events
     socket.on("connect", () => {
@@ -59,11 +61,21 @@ function VideoDisplayPage() {
 
     // Listen for the 'shooting_detected' event
     socket.on("shooting_detected", (data) => {
+      // processing == false after the first shooting_detected event
+      setIsProcessing(false);
       console.log("Shooting detected:", data);
 
+      const timestamp = convertMillisecondsToTimestamp(data.start_time);
+
       if (data.success) {
-        const timestamp = convertMillisecondsToTimestamp(data.start_time);
-        setTimestamps((prevTimestamps) => {
+        setScoringTimestamps((prevTimestamps) => {
+          if (!prevTimestamps.includes(timestamp)) {
+            return [...prevTimestamps, timestamp];
+          }
+          return prevTimestamps;
+        });
+      } else {
+        setShootingTimestamps((prevTimestamps) => {
           if (!prevTimestamps.includes(timestamp)) {
             return [...prevTimestamps, timestamp];
           }
@@ -76,6 +88,7 @@ function VideoDisplayPage() {
     socket.on("processing_complete", (data) => {
       console.log("Processing complete:", data);
       setStatistics(data);
+      setIsModalOpen(true);
       socket.disconnect();
     });
 
@@ -84,6 +97,10 @@ function VideoDisplayPage() {
       console.error("Connection error:", error);
     });
   }, []);
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
 
   return (
     <div className="VD-background">
@@ -94,27 +111,138 @@ function VideoDisplayPage() {
             <video controls>
               <source src={URL.createObjectURL(file)} type={file.type} />
             </video>
-            <div className="VD-timestampTitle">Scoring Moment Timestamps</div>
-            <div className="VD-timestampsContainer">
-              {timestamps.map((timestamp, index) => (
-                <div
-                  key={index}
-                  className="VD-timestamp"
-                  onClick={() => {
-                    handleTimestampClick(timestamp);
-                  }}
-                >
-                  {timestamp}
+            <div className="VD-timestamps">
+              <div
+                className={
+                  videoData.isMatch
+                    ? "VD-timestampsTeam"
+                    : "VD-timestampsNoTeam"
+                }
+              >
+                {videoData.isMatch && (
+                  <div className="VD-timestampTeamTitle">Team A</div>
+                )}
+                <div className="VD-timestampTitle">
+                  Scoring Moment Timestamps
                 </div>
-              ))}
+                <div className="VD-timestampsContainer">
+                  {scoringTimestamps.map((timestamp, index) => (
+                    <div
+                      key={index}
+                      className="VD-scoringTimestamp"
+                      onClick={() => {
+                        handleTimestampClick(timestamp);
+                      }}
+                    >
+                      {timestamp}
+                    </div>
+                  ))}
+                </div>
+                <div className="VD-timestampTitle">
+                  Shooting Moment Timestamps
+                </div>
+                <div className="VD-timestampsContainer">
+                  {shootingTimestamps.map((timestamp, index) => (
+                    <div
+                      key={index}
+                      className="VD-shootingTimestamp"
+                      onClick={() => {
+                        handleTimestampClick(timestamp);
+                      }}
+                    >
+                      {timestamp}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {videoData.isMatch && (
+                <div className="VD-timestampsTeam">
+                  <div className="VD-timestampTeamTitle">Team B</div>
+
+                  <div className="VD-timestampTitle">
+                    Scoring Moment Timestamps
+                  </div>
+                  <div className="VD-timestampsContainer">
+                    {scoringTimestamps.map((timestamp, index) => (
+                      <div
+                        key={index}
+                        className="VD-scoringTimestamp"
+                        onClick={() => {
+                          handleTimestampClick(timestamp);
+                        }}
+                      >
+                        {timestamp}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="VD-timestampTitle">
+                    Shooting Moment Timestamps
+                  </div>
+                  <div className="VD-timestampsContainer">
+                    {shootingTimestamps.map((timestamp, index) => (
+                      <div
+                        key={index}
+                        className="VD-shootingTimestamp"
+                        onClick={() => {
+                          handleTimestampClick(timestamp);
+                        }}
+                      >
+                        {timestamp}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
+
+            {isUploading && (
+              <div className="VD-loading">
+                <div className="VD-overlay" />
+                <div className="VD-uploading">
+                  Uploading Video &nbsp;
+                  <div className="VD-spinner" />
+                </div>
+              </div>
+            )}
+            {isProcessing && (
+              <div className="VD-loading">
+                <div className="VD-overlay" />
+                <div className="VD-uploading">
+                  Processing Video &nbsp;
+                  <div className="VD-spinner-square" />
+                </div>
+              </div>
+            )}
           </div>
-          <Statistics data={statistics} timestamps={timestamps} video={file} />
+          <Statistics
+            data={statistics}
+            videoData={videoData}
+            timestamps={scoringTimestamps}
+            video={file}
+          />
+          <Modal
+            isOpen={isModalOpen}
+            onRequestClose={closeModal}
+            contentLabel="Processing Complete"
+            className="VD-modal"
+          >
+            <div className="VD-modalContent">
+              <h2>Processing Complete</h2>
+              <p>
+                All scoring and shooting moments have been identified. You can
+                now export the highlight videos and statistics.
+              </p>
+              <button onClick={closeModal}>Close</button>
+            </div>
+          </Modal>
         </div>
       ) : (
         <div className="VD-error">
           Error: No video file has been uploaded. Return to &nbsp;
-          <Link to="/">Home Page</Link>.
+          <div className="VD-hpButton" onClick={handleReturnHome}>
+            Home Page
+          </div>
+          .
         </div>
       )}
     </div>

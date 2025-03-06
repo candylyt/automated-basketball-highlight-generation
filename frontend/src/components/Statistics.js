@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { ReactComponent as ExportIcon } from "../assets/exportIcon.svg";
 import "./Statistics.css";
 import Export from "./Export";
 
-function Statistics({ data, timestamps, video }) {
+function Statistics({ data, videoData, timestamps, video }) {
+  const [selectedTeam, setSelectedTeam] = useState("A");
+
   const calculatePercentage = (numerator, denominator) => {
     return (numerator / denominator) * 100;
   };
@@ -12,6 +14,23 @@ function Statistics({ data, timestamps, video }) {
     <div className="statistics">
       <h2>Statistics</h2>
       <div className="division" />
+      {videoData.isMatch && (
+        <div className="statisticsTeams">
+          <div
+            className={selectedTeam === "A" ? "teamSelected" : "teamUnselected"}
+            onClick={() => setSelectedTeam("A")}
+          >
+            Team A
+          </div>
+          <di
+            className={selectedTeam === "B" ? "teamSelected" : "teamUnselected"}
+            onClick={() => setSelectedTeam("B")}
+          >
+            Team B
+          </di>
+        </div>
+      )}
+
       <div className="statisticsItem">
         <div className="statisticsItemTitle">Overall Shooting Percentage</div>
         <div className="statisticsItemValue">

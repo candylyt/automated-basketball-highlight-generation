@@ -19,7 +19,6 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 def process_video(video_path):
     def on_detection(start_time, end_time, success):
-        # print("socket emit")
         socketio.emit('shooting_detected', {
             'start_time' : start_time,
             'end_time' : end_time,
@@ -37,7 +36,14 @@ def process_video(video_path):
 @app.route('/upload' , methods=['POST'])
 def upload_video():
     print('upload_video')
+
     file = request.files['video']
+    is_match = request.form.get('isMatch')
+    is_switched = request.form.get('isSwitched')
+    switch_time = request.form.get('switchTimestamp')
+    quarter_timestamps = request.form.get('quarterTimestamps')
+
+    
     video_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
     file.save(video_path)
 
