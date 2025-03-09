@@ -18,17 +18,47 @@ CORS(app)
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 def process_video(video_path, score_team_args):
-    def on_detection(start_time, end_time, success):
+    def on_detection(start_time, end_time, success, team):
+        '''
+        {
+            'start_time' :  str,   => time in 'hh:mm:ss' format
+            'end_time' :    str,  
+            'success' :     bool,
+            'team' :        char[Optional],  => either 'A', 'B' if is_match is true or otherwise None
+        }
+        
+        '''
         socketio.emit('shooting_detected', {
             'start_time' : start_time,
             'end_time' : end_time,
-            'success': success
+            'success': success,
+            'team' : team
         })
 
-    def on_complete(attempts, makes):
+    def on_complete(report, is_match):
+        '''
+        If is_match is false, the format of the response is
+        
+        {
+            'is_match' :    bool,
+            'makes' :       List[int],  => contains the count for each quarter
+            'attempts' :    List[int],
+        }
+
+        Otherwise if is_match is true,
+
+        {
+            'is_match' :        bool,
+            'team_A_attempts':  List[int],
+            'team_A_makes':     List[int],
+            'team_B_attempts':  List[int],
+            'team_B_makes':     List[int],
+        }
+        '''
+
         socketio.emit('processing_complete', {
-            'attempts' : attempts,
-            'makes' : makes
+            'is_match' : is_match,
+            **report
         })
 
     ShotDetector(video_path, on_detection, on_complete, show_vid=False, **score_team_args)
