@@ -8,6 +8,20 @@ import yaml
 import os
 import time
 
+from logger import (
+    INFO,
+    SOCKET,
+    Logger
+)
+
+
+
+logger = Logger([
+    INFO,
+    SOCKET
+])
+
+
 env = yaml.load(open('config.yaml', 'r'), Loader=yaml.SafeLoader)
 
 app = Flask(__name__)
@@ -18,7 +32,7 @@ CORS(app)
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 def process_video(video_path, score_team_args):
-    def on_detection(start_time, end_time, success, team):
+    def on_detection(start_time, end_time, success, team=None):
         '''
         {
             'start_time' :  str,   => time in 'hh:mm:ss' format
@@ -28,12 +42,16 @@ def process_video(video_path, score_team_args):
         }
         
         '''
-        socketio.emit('shooting_detected', {
+
+        data = {
             'start_time' : start_time,
             'end_time' : end_time,
             'success': success,
             'team' : team
-        })
+        }
+
+        logger.log(SOCKET, f'[shooting_detected]    {data}')
+        socketio.emit('shooting_detected', data)
 
     def on_complete(report, is_match):
         '''
@@ -55,17 +73,20 @@ def process_video(video_path, score_team_args):
             'team_B_makes':     List[int],
         }
         '''
-
-        socketio.emit('processing_complete', {
+        data = {
             'is_match' : is_match,
             **report
-        })
+        }
+
+        logger.log(SOCKET, f'[processing_complete]    {data}')
+        
+        socketio.emit('processing_complete', data)
 
     ShotDetector(video_path, on_detection, on_complete, show_vid=False, **score_team_args)
 
 @app.route('/upload' , methods=['POST'])
 def upload_video():
-    print('upload_video')
+    logger.log(INFO, 'upload_video')
 
     file = request.files['video']
 
@@ -77,7 +98,7 @@ def upload_video():
         "quarter_timestamps" : request.form.get('quarterTimestamps').split(',')
     }
 
-    print(score_team_args)
+    logger.log(INFO, score_team_args)
     
     video_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
     file.save(video_path)
@@ -90,7 +111,7 @@ def upload_video():
     
 @app.route('/generate-report', methods=['POST'])
 def generate_report():
-    print('generate report')
+    logger.log(INFO, 'generate report')
     try:
         data = request.json  # Receive JSON data from frontend
 
