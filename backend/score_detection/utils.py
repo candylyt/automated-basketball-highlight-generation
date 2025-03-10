@@ -1,6 +1,6 @@
 import math
 import numpy as np
-
+from datetime import timedelta, datetime
 
 # TODO: modify line method, use time between reaching up and down regions instead
 def score(ball_pos, hoop_pos):
@@ -284,3 +284,8 @@ def convert_yolo_bbox_to_xyxy(bbox, img_width, img_height):
     y2 = int((y_center + height / 2) * img_height)
     return x1, y1, x2, y2
 
+def get_time_string(timestamp):
+    timestamp = max(0, timestamp)
+
+    t = str(timedelta(milliseconds=timestamp)).split('.')[0]
+    return datetime.strptime(t, "%H:%M:%S").strftime('%H:%M:%S')
