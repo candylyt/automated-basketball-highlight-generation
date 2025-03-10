@@ -1,138 +1,186 @@
 .statistics {
-  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
-  width: 20vw;
-  margin-bottom: 2%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  width: 24vw;
+  height: auto;
+  min-height: 75vh;
   margin-left: 3vw;
   display: flex;
   flex-direction: column;
   position: relative;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 12px;
 }
 
 .statistics h2 {
-  font-size: calc(15px + 2vmin);
-  font-weight: 600;
-  margin-top: 11px;
+  font-size: 28px;
+  font-weight: 700;
+  margin-top: 8px;
   margin-left: 15px;
-  margin-bottom: 1px;
-  align-self: flex-start;
+  margin-bottom: 4px;
+  color: #2c3e50;
 }
 
 .division {
   width: 45%;
-  height: 1px;
-  background-color: black;
-  border: 1px solid black;
+  height: 2px;
+  background-color: #3498db;
   margin-left: 15px;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
 }
 
-.statisticsTeams {
+.stats-container {
   display: flex;
-  flex-direction: row;
-  width: 100%;
-  justify-content: space-around;
-  font-weight: 500;
-  font-size: calc(5px + 2vmin);
-  margin-bottom: 20px;
-}
-
-.teamSelected {
-  width: auto;
-  height: auto;
-  background-color: lightblue;
-  border-radius: 5px;
-  padding-top: 5px;
-  padding-bottom: 5px;
-  padding-left: 10px;
-  padding-right: 10px;
-  cursor: pointer;
-}
-
-.teamUnselected {
-  width: auto;
-  height: auto;
-  border-radius: 5px;
-  padding-top: 5px;
-  padding-bottom: 5px;
-  padding-left: 10px;
-  padding-right: 10px;
-  cursor: pointer;
+  flex-direction: column;
+  gap: 20px;
+  padding: 0 15px;
 }
 
 .statisticsItem {
   display: flex;
   flex-direction: column;
-  margin-left: 15px;
-  margin-bottom: 15px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.statisticsItem:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.statisticsItem.overall {
+  background-color: #e3f2fd;
+  border-left: 4px solid #2196f3;
+}
+
+.statisticsItem.uncontested {
+  background-color: #e8f5e9;
+  border-left: 4px solid #4caf50;
+}
+
+.statisticsItem.contested {
+  background-color: #fff3e0;
+  border-left: 4px solid #ff9800;
 }
 
 .statisticsItemTitle {
-  font-weight: 500;
-  font-size: calc(5px + 2vmin);
-  margin-bottom: 10px;
+  font-weight: 600;
+  font-size: 18px;
+  margin-bottom: 12px;
+  color: #2c3e50;
 }
 
 .statisticsItemValue {
   display: flex;
   flex-direction: row;
-  font-size: calc(10px + 2vmin);
-  justify-content: center;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0 10px;
 }
 
 .verticalDivider {
-  width: 3px;
-  height: cal(10px + 2vmin);
+  width: 2px;
+  height: 40px;
   background-color: #e0e0e0;
-  margin-left: 2vw;
-  margin-right: 1.5vw;
+  margin: 0 20px;
 }
 
 .shootingPercentage {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
+  min-width: 100px;
 }
 
 .number {
-  font-size: calc(20px + 3vmin);
+  font-size: 32px;
+  font-weight: 700;
+  color: #2c3e50;
 }
 
 .percentage {
-  font-size: calc(10px + 2vmin);
-  margin-left: 5px;
+  font-size: 20px;
+  margin-left: 2px;
+  color: #7f8c8d;
 }
 
 .totalShots {
-  font-size: calc(5px + 2vmin);
   display: flex;
-  flex-direction: row;
+  align-items: baseline;
+  gap: 5px;
 }
 
 .shotNumber {
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 20px;
+  color: #2c3e50;
+}
+
+.shotLabel {
+  font-size: 14px;
+  color: #7f8c8d;
+  text-transform: uppercase;
 }
 
 .shotAttempts {
-  font-size: calc(1px + 2vmin);
-  color: grey;
+  font-size: 16px;
+  color: #7f8c8d;
+  margin-top: 4px;
 }
 
-.detailedShots {
+.loading-spinner {
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: #3498db;
+  font-size: 18px;
+  font-style: italic;
 }
 
-.export {
-  position: absolute;
-  bottom: 5%;
+.error-message {
   display: flex;
-  left: 10vmin;
-  font-size: calc(10px + 2vmin);
-  font-weight: 600;
-  cursor: pointer;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: #e74c3c;
+  font-size: 16px;
+  text-align: center;
+  padding: 20px;
 }
 
-.exportIcon {
-  margin-left: 10px;
+.export-container {
+  margin-top: auto;
+  padding: 20px 15px;
+  border-top: 1px solid #ecf0f1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .statistics {
+    width: 30vw;
+  }
+}
+
+@media (max-width: 992px) {
+  .statistics {
+    width: 40vw;
+  }
+}
+
+@media (max-width: 768px) {
+  .statistics {
+    width: 90vw;
+    margin: 20px auto;
+    min-height: auto;
+  }
+
+  .statisticsItemValue {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .verticalDivider {
+    display: none;
+  }
 }

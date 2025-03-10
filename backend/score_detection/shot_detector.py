@@ -16,7 +16,114 @@ from enum import Enum
 
 # get environment variables
 env = yaml.load(open('config.yaml', 'r'), Loader=yaml.SafeLoader)
-print("Environment variables: ", env)
+print(env)
+
+# p = Popen(['ffmpeg', '-y', '-f', 'image2pipe', '-vcodec', 'mjpeg', '-r', '24', '-i', '-', '-vcodec', 'h264', '-qscale', '5', '-r', '24', env['output_path'] + '/' + env['input'].split("/")[-1]], stdin=PIPE)
+
+class VideoComposer:
+    def __init__(self, output_dir):
+        self.output_dir = output_dir
+        self.made_shots = []
+        self.missed_shots = []
+        self.made_writer = None
+        self.missed_writer = None
+        os.makedirs(output_dir, exist_ok=True)
+
+    def add_shot(self, video_path, start_time, end_time, made):
+        shot_info = {
+            'video_path': video_path,
+            'start_time': start_time,
+            'end_time': end_time
+        }
+        if made:
+            self.made_shots.append(shot_info)
+        else:
+            self.missed_shots.append(shot_info)
+
+    def _create_clip(self, shot_info, output_path):
+        cap = cv2.VideoCapture(shot_info['video_path'])
+        fps = int(cap.get(cv2.CAP_PROP_FPS))
+        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        
+        # Calculate frame positions
+        start_frame = int((shot_info['start_time'] / 1000.0) * fps)
+        end_frame = int((shot_info['end_time'] / 1000.0) * fps)
+        
+        cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
+        
+        writer = None
+        frame_count = 0
+        
+        while cap.isOpened() and frame_count < (end_frame - start_frame):
+            ret, frame = cap.read()
+            if not ret:
+                break
+                
+            if writer is None:
+                writer = cv2.VideoWriter(
+                    output_path,
+                    cv2.VideoWriter_fourcc(*'avc1'),  # Using H.264 codec
+                    fps,
+                    (width, height)
+                )
+            
+            writer.write(frame)
+            frame_count += 1
+        
+        if writer:
+            writer.release()
+        cap.release()
+
+    def _concatenate_videos(self, video1_path, video2_path, output_path):
+        # Create a temporary file list
+        temp_file = os.path.join(self.output_dir, "temp_file_list.txt")
+        with open(temp_file, "w") as f:
+            f.write(f"file '{video1_path}'\nfile '{video2_path}'")
+        
+        # Use ffmpeg with specific codec settings
+        temp_output = f"{output_path}.tmp"
+        os.system(f'ffmpeg -f concat -safe 0 -i {temp_file} -c:v libx264 -preset medium -crf 23 -y {temp_output}')
+        
+        # Check if the concatenation was successful
+        if os.path.exists(temp_output) and os.path.getsize(temp_output) > 0:
+            os.rename(temp_output, output_path)
+        else:
+            # Fallback: if concatenation fails, just keep the first video
+            os.rename(video1_path, output_path)
+            
+        # Cleanup
+        if os.path.exists(temp_file):
+            os.remove(temp_file)
+        if os.path.exists(video2_path):
+            os.remove(video2_path)
+
+    def compose_videos(self):
+        made_output = os.path.join(self.output_dir, 'made_shots.mp4')
+        missed_output = os.path.join(self.output_dir, 'missed_shots.mp4')
+        
+        # Process made shots
+        for i, shot in enumerate(self.made_shots):
+            temp_output = os.path.join(self.output_dir, f'temp_made_{i}.mp4')
+            self._create_clip(shot, temp_output)
+            
+            if not os.path.exists(made_output):
+                os.rename(temp_output, made_output)
+            else:
+                self._concatenate_videos(made_output, temp_output, made_output)
+        
+        # Process missed shots
+        for i, shot in enumerate(self.missed_shots):
+            temp_output = os.path.join(self.output_dir, f'temp_missed_{i}.mp4')
+            self._create_clip(shot, temp_output)
+            
+            if not os.path.exists(missed_output):
+                os.rename(temp_output, missed_output)
+            else:
+                self._concatenate_videos(missed_output, temp_output, missed_output)
+        
+        return (made_output if self.made_shots else None, 
+                missed_output if self.missed_shots else None)
 
 class ShotDetector:
     def __init__(self, video_path, on_detect, on_complete, show_vid=False):
@@ -26,11 +133,18 @@ class ShotDetector:
         self.detect_callback = on_detect
         self.on_complete = on_complete
         self.show_vid = show_vid
+        self.video_path = video_path
 
-        
+        # Initialize video composer
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        self.output_dir = os.path.join(env['output_path'], f'shots_{timestamp}')
+        self.video_composer = VideoComposer(self.output_dir)
+
+        # Use video - replace text with your video path
         self.cap = cv2.VideoCapture(video_path)
         self.frame_rate = self.cap.get(cv2.CAP_PROP_FPS)
         print(f"FPS: {self.frame_rate}")
+
 
         self.ball_pos = []  # array of tuples ((x_pos, y_pos), frame count, width, height, conf)
         self.hoop_pos = []  # array of tuples ((x_pos, y_pos), frame count, width, height, conf)
@@ -77,28 +191,27 @@ class ShotDetector:
         self.output_height = env['output_height']
 
         if self.save:
-            output_name = env['output_path'] + '/' + env['input'].split("/")[-1].split('.')[0] + str(datetime.datetime.now()) 
-            output_name = output_name.replace(':','-').replace('.','-') + ".mp4"
-            print("Saving results to: ", output_name)
-            self.out = cv2.VideoWriter(output_name,  cv2.VideoWriter_fourcc(*'mp4v'), self.frame_rate, (self.output_width, self.output_height))
+            output_name = os.path.join(self.output_dir, 'full_analysis.mp4')
+            print(output_name)
+            self.out = cv2.VideoWriter(output_name, cv2.VideoWriter_fourcc(*'mp4v'), self.frame_rate, (env['output_width'], env['output_height']))
         
-        start_time = time.time()
         self.run()
-        
-        end_time = time.time()
-        duration = end_time - start_time
-        minutes = int(duration // 60)
-        seconds = int(duration % 60)
 
-        print(f"Total processing time: {minutes:02d}:{seconds:02d}")
+    def on_shot_detected(self, start_time, end_time, made):
+        # Add shot to video composer
+        self.video_composer.add_shot(self.video_path, start_time, end_time, made)
+        # Call original callback
+        self.detect_callback(start_time, end_time, made)
 
     def run(self):
-        
         while True:
             ret, self.frame = self.cap.read()
 
             if not ret:
-                print("Processing complete")
+                # Compose final videos before completing
+                made_path, missed_path = self.video_composer.compose_videos()
+                self.on_complete(self.attempts, self.makes, made_path, missed_path)
+                print("processing complete")
                 break
 
             self.timestamp = self.cap.get(cv2.CAP_PROP_POS_MSEC)
@@ -169,17 +282,15 @@ class ShotDetector:
                     if cv2.waitKey(1) & 0xFF == ord('q'):  # higher waitKey slows video down, use 1 for webcam
                         break
 
-                if self.screen_shot_moment:
-                    cv2.imwrite(f"{self.screen_shot_path}/{self.screen_shot_count}.png", self.frame)
-                    self.screen_shot_moment = False
-                    self.screen_shot_count += 1
+            # if self.screen_shot:
+            #     cv2.imwrite(f"{screenshot_path}/{self.screen_shot_count}.png", self.frame)
+            #     self.screen_shot = False
+            #     self.screen_shot_count += 1
+            if self.save:
+                # im = Image.fromarray(cv2.cvtColor(cv2.resize(self.frame, (env['output_width'], env['output_height'])), cv2.COLOR_BGR2RGB))
+                # im.save(p.stdin, 'JPEG')
+                self.out.write(cv2.resize(self.frame, (env['output_width'], env['output_height'])))
 
-                if self.save:
-                    self.out.write(cv2.resize(self.frame, (env['output_width'], env['output_height'])))
-
-
-        # Report score and cleanup upon finish
-        self.on_complete(self.attempts, self.makes)
         self.cap.release()
         if self.show_vid:
             cv2.destroyAllWindows()
@@ -288,11 +399,19 @@ class ShotDetector:
                         # print(self.ball_pos[-1], self.last_point_in_region, self.hoop_pos[-1])
                         self.makes += 1
                         self.attempts += 1
-                        self.detect_callback(max(0, self.timestamp-3000), self.timestamp+2000, True)
-                        print(f"[{str(timedelta(milliseconds=self.timestamp)).split('.')[0]}] Shot made")
-                    # else:
-                    #     self.detect_callback(max(0, self.timestamp-3000), self.timestamp+2000, False)
-                    #     print("attempt made")
+                        self.frame = cv2.putText(self.frame, 'DOWN', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+                        if scored:
+                            self.makes += 1
+                            self.on_shot_detected(max(0, self.timestamp-3000), self.timestamp+2000, True)
+                            print("shot made")
+                        else:
+                            self.on_shot_detected(max(0, self.timestamp-3000), self.timestamp+2000, False)
+                            print("attempt made")
+
+                        
+                        self.up = False
+                        self.down = False
+                        self.up_frame = None
                         self.overlay_color = (0, 255, 0)
                         self.fade_counter = self.fade_frames
                         self.attempt_cooldown = self.MADE_ATTEMPT_COOLDOWN
@@ -306,21 +425,45 @@ class ShotDetector:
                 
 
                 else:
-                    if self.attempt_time >= self.ATTEMPT_DETECTION_INTERVAL:
-                        self.overlay_color = (0, 0, 255)
-                        self.fade_counter = self.fade_frames
-                        self.detect_callback(max(0, self.timestamp-3000), self.timestamp+2000, False)
-                        print(f"[{str(timedelta(milliseconds=self.timestamp)).split('.')[0]}] Attempt made")
-                        self.attempts += 1
-                        
-                        self.attempt_cooldown = self.MISS_ATTEMPT_COOLDOWN
-                        self.screen_shot_moment = True
-                        
-                    
-                    self.attempt_time = 0
-                    self.ball_entered = False
-                    self.last_point_in_region = None
+                    self.up_frame = None
+                    self.attempts += 1
+                    self.down = False
+                    self.up = False
+                    self.attempt_cooldown = 100
+                    self.on_shot_detected(max(0, self.timestamp-5000), self.timestamp+3000, False)
+                    print("attempt made")
+                    # self.attempts += 1
+                    # self.overlay_color = (0, 0, 255)
+                        # self.fade_counter = self.fade_frames
 
+
+                    
+            # TODO: Modify scoring condition -> when down state occurs after up state
+            # If ball goes from 'up' area to 'down' area in that order, increase attempt and reset
+            # if self.frame_count % 10 == 0:
+            #     if self.up and self.down and self.up_frame < self.down_frame:
+            #         self.attempts += 1
+            #         self.up = False
+            #         self.down = False
+            #         self.overlay_color = (0, 255, 0)
+            #         self.fade_counter = self.fade_frames
+
+            #         # If it is a make, put a green overlay
+            #         score_res = score(self.ball_pos, self.hoop_pos)
+            #         print(score_res)
+            #         self.screen_shot = True
+            #         if score_res:
+            #             score_t, self.line = score_res
+            #             self.line_frames = 25
+            #             if score_t:
+            #                 self.makes += 1
+            #                 self.overlay_color = (0, 255, 0)
+            #                 self.fade_counter = self.fade_frames
+
+            #             # If it is a miss, put a red overlay
+            #             else:
+            #                 self.overlay_color = (0, 0, 255)
+            #                 self.fade_counter = self.fade_frames
 
     def display_score(self):
         # Add text

@@ -1,0 +1,2 @@
+file 'output/shots_20250218_004252/made_shots.mp4'
+file 'output/shots_20250218_004252/temp_made_2.mp4'
