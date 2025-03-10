@@ -229,8 +229,9 @@ const Export = ({ timestamps, video }) => {
       >
         <h2>Export Options</h2>
         <label className="stepLabel">Step 1: Select Timestamps</label>
+        <label className="stepLabel">Team A Scoring Moments</label>
         <div className="timestampContainer">
-          {timestamps.map((timestamp, index) => (
+          {timestamps.scoringTimestampsA.map((timestamp, index) => (
             <div key={index} className="timestamp">
               <label htmlFor={`timestamp-${index}`}>{timestamp}</label>
               <input

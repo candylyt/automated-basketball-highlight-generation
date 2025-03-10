@@ -21,9 +21,18 @@ function VideoDisplayPage({
   const location = useLocation();
   const { file } = location.state || {};
 
-  const [scoringTimestamps, setScoringTimestamps] = useState([]);
-  const [shootingTimestamps, setShootingTimestamps] = useState([]);
-  const [statistics, setStatistics] = useState(null);
+  // Team A Data
+  const [scoringTimestampsA, setScoringTimestampsA] = useState([]);
+  const [shootingTimestampsA, setShootingTimestampsA] = useState([]);
+  const [makesA, setMakesA] = useState([]);
+  const [attemptsA, setAttemptsA] = useState([]);
+
+  // Team B Data
+  const [scoringTimestampsB, setScoringTimestampsB] = useState([]);
+  const [shootingTimestampsB, setShootingTimestampsB] = useState([]);
+  const [makesB, setMakesB] = useState([]);
+  const [attemptsB, setAttemptsB] = useState([]);
+
   const [isConnected, setIsConnected] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -65,29 +74,63 @@ function VideoDisplayPage({
       setIsProcessing(false);
       console.log("Shooting detected:", data);
 
-      const timestamp = convertMillisecondsToTimestamp(data.start_time);
+      // const timestamp = convertMillisecondsToTimestamp(data.start_time);
 
+      // Scoring Moments
       if (data.success) {
-        setScoringTimestamps((prevTimestamps) => {
-          if (!prevTimestamps.includes(timestamp)) {
-            return [...prevTimestamps, timestamp];
-          }
-          return prevTimestamps;
-        });
-      } else {
-        setShootingTimestamps((prevTimestamps) => {
-          if (!prevTimestamps.includes(timestamp)) {
-            return [...prevTimestamps, timestamp];
-          }
-          return prevTimestamps;
-        });
+        // Add the timestamp to Team A
+        if (data.team === "A" || data.team === None) {
+          setScoringTimestampsA((prevTimestamps) => {
+            if (!prevTimestamps.includes(data.start_time)) {
+              return [...prevTimestamps, data.start_time];
+            }
+            return prevTimestamps;
+          });
+        } else {
+          // Add the timestamp to Team B
+          setScoringTimestampsB((prevTimestamps) => {
+            if (!prevTimestamps.includes(data.start_time)) {
+              return [...prevTimestamps, data.start_time];
+            }
+            return prevTimestamps;
+          });
+        }
+      }
+      // Shooting Moments
+      else {
+        // Add the timestamp to Team A
+        if (data.team === "A" || data.team === None) {
+          setShootingTimestampsA((prevTimestamps) => {
+            if (!prevTimestamps.includes(timestamp)) {
+              return [...prevTimestamps, timestamp];
+            }
+            return prevTimestamps;
+          });
+        } else {
+          // Add the timestamp to Team B
+          setShootingTimestampsB((prevTimestamps) => {
+            if (!prevTimestamps.includes(timestamp)) {
+              return [...prevTimestamps, timestamp];
+            }
+            return prevTimestamps;
+          });
+        }
       }
     });
 
     // Listen for the 'processing_complete' event
     socket.on("processing_complete", (data) => {
       console.log("Processing complete:", data);
-      setStatistics(data);
+
+      if (data.is_match) {
+        setMakesA(data.team_A_makes);
+        setAttemptsA(data.team_A_attempts);
+        setMakesB(data.team_B_makes);
+        setAttemptsB(data.team_B_attempts);
+      } else {
+        setMakesA(data.makes);
+        setAttemptsA(data.attempts);
+      }
       setIsModalOpen(true);
       socket.disconnect();
     });
@@ -126,7 +169,7 @@ function VideoDisplayPage({
                   Scoring Moment Timestamps
                 </div>
                 <div className="VD-timestampsContainer">
-                  {scoringTimestamps.map((timestamp, index) => (
+                  {scoringTimestampsA.map((timestamp, index) => (
                     <div
                       key={index}
                       className="VD-scoringTimestamp"
@@ -142,7 +185,7 @@ function VideoDisplayPage({
                   Shooting Moment Timestamps
                 </div>
                 <div className="VD-timestampsContainer">
-                  {shootingTimestamps.map((timestamp, index) => (
+                  {shootingTimestampsA.map((timestamp, index) => (
                     <div
                       key={index}
                       className="VD-shootingTimestamp"
@@ -163,7 +206,7 @@ function VideoDisplayPage({
                     Scoring Moment Timestamps
                   </div>
                   <div className="VD-timestampsContainer">
-                    {scoringTimestamps.map((timestamp, index) => (
+                    {scoringTimestampsB.map((timestamp, index) => (
                       <div
                         key={index}
                         className="VD-scoringTimestamp"
@@ -179,7 +222,7 @@ function VideoDisplayPage({
                     Shooting Moment Timestamps
                   </div>
                   <div className="VD-timestampsContainer">
-                    {shootingTimestamps.map((timestamp, index) => (
+                    {shootingTimestampsB.map((timestamp, index) => (
                       <div
                         key={index}
                         className="VD-shootingTimestamp"
@@ -215,9 +258,14 @@ function VideoDisplayPage({
             )}
           </div>
           <Statistics
-            data={statistics}
+            data={{ makesA, makesB, attemptsA, attemptsB }}
             videoData={videoData}
-            timestamps={scoringTimestamps}
+            timestamps={{
+              scoringTimestampsA,
+              scoringTimestampsB,
+              shootingTimestampsA,
+              shootingTimestampsB,
+            }}
             video={file}
           />
           <Modal

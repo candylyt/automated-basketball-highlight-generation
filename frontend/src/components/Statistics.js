@@ -37,7 +37,9 @@ function Statistics({ data, videoData, timestamps, video }) {
           <div className="shootingPercentage">
             <div className="number">
               {data
-                ? calculatePercentage(data.makes, data.attempts).toFixed(1)
+                ? selectedTeam === "A"
+                  ? calculatePercentage(data.makesA, data.attemptsA).toFixed(1)
+                  : calculatePercentage(data.makesB, data.attemptsB).toFixed(1)
                 : "-"}
               <span className="percentage">%</span>
             </div>
@@ -45,11 +47,21 @@ function Statistics({ data, videoData, timestamps, video }) {
           <div className="verticalDivider" />
           <div className="detailedShots">
             <div className="totalShots">
-              <div className="shotNumber">{data ? data.attempts : "-"}</div>
+              <div className="shotNumber">
+                {data
+                  ? selectedTeam === "A"
+                    ? data.attemptsA
+                    : data.attemptsB
+                  : "-"}
+              </div>
               <div>&nbsp;SHOTS</div>
             </div>
             <div className="shotAttempts">
-              {data ? `${data.makes}/${data.attempts}` : "-/-"}
+              {data
+                ? selectedTeam === "A"
+                  ? `${data.makesA}/${data.attemptsA}`
+                  : `${data.makesB}/${data.attemptsB}`
+                : "-/-"}
             </div>
           </div>
         </div>
@@ -60,7 +72,9 @@ function Statistics({ data, videoData, timestamps, video }) {
           <div className="shootingPercentage">
             <div className="number">
               {data
-                ? calculatePercentage(data.makes, data.attempts).toFixed(1)
+                ? selectedTeam === "A"
+                  ? calculatePercentage(data.makesA, data.attemptsA).toFixed(1)
+                  : calculatePercentage(data.makesB, data.attemptsB).toFixed(1)
                 : "-"}
               <span className="percentage">%</span>
             </div>
@@ -68,11 +82,21 @@ function Statistics({ data, videoData, timestamps, video }) {
           <div className="verticalDivider" />
           <div className="detailedShots">
             <div className="totalShots">
-              <div className="shotNumber">{data ? data.attempts : "-"}</div>
+              <div className="shotNumber">
+                {data
+                  ? selectedTeam === "A"
+                    ? data.attemptsA
+                    : data.attemptsB
+                  : "-"}
+              </div>
               <div>&nbsp;SHOTS</div>
             </div>
             <div className="shotAttempts">
-              {data ? `${data.makes}/${data.attempts}` : "-/-"}
+              {data
+                ? selectedTeam === "A"
+                  ? `${data.makesA}/${data.attemptsA}`
+                  : `${data.makesB}/${data.attemptsB}`
+                : "-/-"}
             </div>
           </div>
         </div>
@@ -83,7 +107,9 @@ function Statistics({ data, videoData, timestamps, video }) {
           <div className="shootingPercentage">
             <div className="number">
               {data
-                ? calculatePercentage(data.makes, data.attempts).toFixed(1)
+                ? selectedTeam === "A"
+                  ? calculatePercentage(data.makesA, data.attemptsA).toFixed(1)
+                  : calculatePercentage(data.makesB, data.attemptsB).toFixed(1)
                 : "-"}
               <span className="percentage">%</span>
             </div>
@@ -91,11 +117,21 @@ function Statistics({ data, videoData, timestamps, video }) {
           <div className="verticalDivider" />
           <div className="detailedShots">
             <div className="totalShots">
-              <div className="shotNumber">{data ? data.attempts : "-"}</div>
+              <div className="shotNumber">
+                {data
+                  ? selectedTeam === "A"
+                    ? data.attemptsA
+                    : data.attemptsB
+                  : "-"}
+              </div>
               <div>&nbsp;SHOTS</div>
             </div>
             <div className="shotAttempts">
-              {data ? `${data.makes}/${data.attempts}` : "-/-"}
+              {data
+                ? selectedTeam === "A"
+                  ? `${data.makesA}/${data.attemptsA}`
+                  : `${data.makesB}/${data.attemptsB}`
+                : "-/-"}
             </div>
           </div>
         </div>
