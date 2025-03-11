@@ -122,6 +122,7 @@ function VideoDisplayPage({
     // Listen for the 'processing_complete' event
     socket.on("processing_complete", (data) => {
       console.log("Processing complete:", data);
+      setIsProcessing(false);
 
       if (data.is_match) {
         setMakesA(data.team_A_makes);
