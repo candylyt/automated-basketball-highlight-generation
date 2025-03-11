@@ -79,7 +79,7 @@ function VideoDisplayPage({
       // Scoring Moments
       if (data.success) {
         // Add the timestamp to Team A
-        if (data.team === "A" || data.team === None) {
+        if (data.team === "A" || !data.team) {
           setScoringTimestampsA((prevTimestamps) => {
             if (!prevTimestamps.includes(data.start_time)) {
               return [...prevTimestamps, data.start_time];
@@ -99,18 +99,18 @@ function VideoDisplayPage({
       // Shooting Moments
       else {
         // Add the timestamp to Team A
-        if (data.team === "A" || data.team === None) {
+        if (data.team === "A" || !data.team) {
           setShootingTimestampsA((prevTimestamps) => {
-            if (!prevTimestamps.includes(timestamp)) {
-              return [...prevTimestamps, timestamp];
+            if (!prevTimestamps.includes(data.start_time)) {
+              return [...prevTimestamps, data.start_time];
             }
             return prevTimestamps;
           });
         } else {
           // Add the timestamp to Team B
           setShootingTimestampsB((prevTimestamps) => {
-            if (!prevTimestamps.includes(timestamp)) {
-              return [...prevTimestamps, timestamp];
+            if (!prevTimestamps.includes(data.start_time)) {
+              return [...prevTimestamps, data.start_time];
             }
             return prevTimestamps;
           });
