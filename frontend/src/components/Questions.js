@@ -48,7 +48,6 @@ function Questions({ isOpen, onRequestClose, onSubmit }) {
     }
 
     const formattedTimestamps = quarterTimestamps.map(convertFullTimestamp);
-    console.log(formattedTimestamps);
 
     setError("");
     onSubmit({ isMatch, isSwitched, switchTimestamp, formattedTimestamps });

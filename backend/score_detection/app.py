@@ -90,6 +90,7 @@ def upload_video():
 
     file = request.files['video']
 
+    logger.log(INFO, request.form)
     
     score_team_args = {
         "is_match" : request.form.get('isMatch') == 'true',
