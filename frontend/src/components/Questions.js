@@ -9,7 +9,7 @@ function Questions({ isOpen, onRequestClose, onSubmit }) {
   const [isMatch, setIsMatch] = useState(null);
   const [isSwitched, setIsSwitched] = useState(null);
   const [switchTimestamp, setSwitchTimestamp] = useState("");
-  const [quarterTimestamps, setQuarterTimestamps] = useState([""]);
+  const [quarterTimestamps, setQuarterTimestamps] = useState(["00:00"]);
   const [error, setError] = useState("");
 
   const handleAddQuarter = () => {
@@ -94,27 +94,30 @@ function Questions({ isOpen, onRequestClose, onSubmit }) {
             </label>
           </div>
         </div>
-        <div className="Question-formGroup">
-          <label>2. Did the teams switch side throughout the game?</label>
-          <div className="Question-radioGroup">
-            <label>
-              Yes
-              <input
-                type="radio"
-                checked={isSwitched === true}
-                onChange={(e) => setIsSwitched(true)}
-              />
-            </label>
-            <label>
-              No
-              <input
-                type="radio"
-                checked={isSwitched === false}
-                onChange={(e) => setIsSwitched(false)}
-              />
-            </label>
+        {isMatch && (
+          <div className="Question-formGroup">
+            <label>2. Did the teams switch side throughout the game?</label>
+            <div className="Question-radioGroup">
+              <label>
+                Yes
+                <input
+                  type="radio"
+                  checked={isSwitched === true}
+                  onChange={(e) => setIsSwitched(true)}
+                />
+              </label>
+              <label>
+                No
+                <input
+                  type="radio"
+                  checked={isSwitched === false}
+                  onChange={(e) => setIsSwitched(false)}
+                />
+              </label>
+            </div>
           </div>
-        </div>
+        )}
+
         {isSwitched && (
           <div className="Question-formGroup">
             <label>
@@ -132,8 +135,12 @@ function Questions({ isOpen, onRequestClose, onSubmit }) {
         <div className="Question-formGroup">
           <label>
             {`${
-              isSwitched === true ? "4." : "3."
-            } Please indicate the timestamp for each quarter (if any).`}
+              isMatch === false || !isMatch
+                ? "2."
+                : isSwitched === true
+                ? "4."
+                : "3."
+            } Please indicate the starting timestamp for each quarter (if any).`}
           </label>
           <div className="Question-quarters">
             {quarterTimestamps.map((timestamp, index) => (
@@ -145,13 +152,15 @@ function Questions({ isOpen, onRequestClose, onSubmit }) {
                   placeholder={`Quarter ${index + 1}`}
                   onChange={(e) => handleQuarterChange(index, e.target.value)}
                 />
-                <button
-                  className="Question-delete"
-                  type="button"
-                  onClick={() => handleDeleteQuarter(index)}
-                >
-                  Delete
-                </button>
+                {index !== 0 && (
+                  <button
+                    className="Question-delete"
+                    type="button"
+                    onClick={() => handleDeleteQuarter(index)}
+                  >
+                    Delete
+                  </button>
+                )}
               </div>
             ))}
           </div>
@@ -169,8 +178,9 @@ function Questions({ isOpen, onRequestClose, onSubmit }) {
             type="submit"
             disabled={
               isMatch == null ||
-              isSwitched == null ||
-              (isSwitched && switchTimestamp === "")
+              (isMatch && isSwitched == null) ||
+              (isSwitched && switchTimestamp === "") ||
+              quarterTimestamps.some((timestamp) => timestamp === "")
             }
           >
             Submit
