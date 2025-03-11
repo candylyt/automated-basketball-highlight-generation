@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Modal from "react-modal";
 import "./Questions.css";
-import { validateTimestamp } from "./utils";
+import { validateTimestamp, convertFullTimestamp } from "./utils";
 
 Modal.setAppElement("#root");
 
@@ -47,8 +47,11 @@ function Questions({ isOpen, onRequestClose, onSubmit }) {
       }
     }
 
+    const formattedTimestamps = quarterTimestamps.map(convertFullTimestamp);
+    console.log(formattedTimestamps);
+
     setError("");
-    onSubmit({ isMatch, isSwitched, switchTimestamp, quarterTimestamps });
+    onSubmit({ isMatch, isSwitched, switchTimestamp, formattedTimestamps });
     onRequestClose();
   };
 

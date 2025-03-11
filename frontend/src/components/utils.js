@@ -40,3 +40,24 @@ export const validateTimestamp = (timestamp) => {
   const mmssPattern = /^[0-5]?[0-9]:[0-5][0-9]$/;
   return hhmmssPattern.test(timestamp) || mmssPattern.test(timestamp);
 };
+
+export const convertTimestamp = (timestamp) => {
+  const [hh, mm, ss] = timestamp.split(":");
+  if (hh === "00") {
+    return `${mm}:${ss}`;
+  }
+  return timestamp;
+};
+
+export const convertFullTimestamp = (timestamp) => {
+  const parts = timestamp.split(":");
+  if (parts.length == 2) {
+    const [mm, ss] = parts;
+    return `00:${mm}:${ss}`;
+  }
+  return timestamp;
+};
+
+export const sumArray = (arr) => {
+  return arr.reduce((acc, num) => acc + num, 0);
+};

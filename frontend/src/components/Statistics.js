@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { ReactComponent as ExportIcon } from "../assets/exportIcon.svg";
 import "./Statistics.css";
 import Export from "./Export";
+import { sumArray } from "./utils";
 
 function Statistics({ data, videoData, timestamps, video }) {
   const [selectedTeam, setSelectedTeam] = useState("A");
@@ -36,10 +37,19 @@ function Statistics({ data, videoData, timestamps, video }) {
         <div className="statisticsItemValue">
           <div className="shootingPercentage">
             <div className="number">
-              {data
+              {data.makesA.length > 0 ||
+              data.makesB.length > 0 ||
+              data.attemptsA.length > 0 ||
+              data.attemptsB.length > 0
                 ? selectedTeam === "A"
-                  ? calculatePercentage(data.makesA, data.attemptsA).toFixed(1)
-                  : calculatePercentage(data.makesB, data.attemptsB).toFixed(1)
+                  ? calculatePercentage(
+                      sumArray(data.makesA),
+                      sumArray(data.attemptsA)
+                    ).toFixed(1)
+                  : calculatePercentage(
+                      sumArray(data.makesB),
+                      sumArray(data.attemptsB)
+                    ).toFixed(1)
                 : "-"}
               <span className="percentage">%</span>
             </div>
@@ -48,7 +58,10 @@ function Statistics({ data, videoData, timestamps, video }) {
           <div className="detailedShots">
             <div className="totalShots">
               <div className="shotNumber">
-                {data
+                {data.makesA.length > 0 ||
+                data.makesB.length > 0 ||
+                data.attemptsA.length > 0 ||
+                data.attemptsB.length > 0
                   ? selectedTeam === "A"
                     ? data.attemptsA
                     : data.attemptsB
@@ -57,10 +70,13 @@ function Statistics({ data, videoData, timestamps, video }) {
               <div>&nbsp;SHOTS</div>
             </div>
             <div className="shotAttempts">
-              {data
+              {data.makesA.length > 0 ||
+              data.makesB.length > 0 ||
+              data.attemptsA.length > 0 ||
+              data.attemptsB.length > 0
                 ? selectedTeam === "A"
-                  ? `${data.makesA}/${data.attemptsA}`
-                  : `${data.makesB}/${data.attemptsB}`
+                  ? `${sumArray(data.makesA)}/${sumArray(data.attemptsA)}`
+                  : `${sumArray(data.makesB)}/${sumArray(data.attemptsB)}`
                 : "-/-"}
             </div>
           </div>
@@ -71,10 +87,19 @@ function Statistics({ data, videoData, timestamps, video }) {
         <div className="statisticsItemValue">
           <div className="shootingPercentage">
             <div className="number">
-              {data
+              {data.makesA.length > 0 ||
+              data.makesB.length > 0 ||
+              data.attemptsA.length > 0 ||
+              data.attemptsB.length > 0
                 ? selectedTeam === "A"
-                  ? calculatePercentage(data.makesA, data.attemptsA).toFixed(1)
-                  : calculatePercentage(data.makesB, data.attemptsB).toFixed(1)
+                  ? calculatePercentage(
+                      sumArray(data.makesA),
+                      sumArray(data.attemptsA)
+                    ).toFixed(1)
+                  : calculatePercentage(
+                      sumArray(data.makesB),
+                      sumArray(data.attemptsB)
+                    ).toFixed(1)
                 : "-"}
               <span className="percentage">%</span>
             </div>
@@ -83,19 +108,25 @@ function Statistics({ data, videoData, timestamps, video }) {
           <div className="detailedShots">
             <div className="totalShots">
               <div className="shotNumber">
-                {data
+                {data.makesA.length > 0 ||
+                data.makesB.length > 0 ||
+                data.attemptsA.length > 0 ||
+                data.attemptsB.length > 0
                   ? selectedTeam === "A"
-                    ? data.attemptsA
-                    : data.attemptsB
+                    ? sumArray(data.attemptsA)
+                    : sumArray(data.attemptsB)
                   : "-"}
               </div>
               <div>&nbsp;SHOTS</div>
             </div>
             <div className="shotAttempts">
-              {data
+              {data.makesA.length > 0 ||
+              data.makesB.length > 0 ||
+              data.attemptsA.length > 0 ||
+              data.attemptsB.length > 0
                 ? selectedTeam === "A"
-                  ? `${data.makesA}/${data.attemptsA}`
-                  : `${data.makesB}/${data.attemptsB}`
+                  ? `${sumArray(data.makesA)}/${sumArray(data.attemptsA)}`
+                  : `${sumArray(data.makesB)}/${sumArray(data.attemptsB)}`
                 : "-/-"}
             </div>
           </div>
@@ -106,10 +137,19 @@ function Statistics({ data, videoData, timestamps, video }) {
         <div className="statisticsItemValue">
           <div className="shootingPercentage">
             <div className="number">
-              {data
+              {data.makesA.length > 0 ||
+              data.makesB.length > 0 ||
+              data.attemptsA.length > 0 ||
+              data.attemptsB.length > 0
                 ? selectedTeam === "A"
-                  ? calculatePercentage(data.makesA, data.attemptsA).toFixed(1)
-                  : calculatePercentage(data.makesB, data.attemptsB).toFixed(1)
+                  ? calculatePercentage(
+                      sumArray(data.makesA),
+                      sumArray(data.attemptsA)
+                    ).toFixed(1)
+                  : calculatePercentage(
+                      sumArray(data.makesB),
+                      sumArray(data.attemptsB)
+                    ).toFixed(1)
                 : "-"}
               <span className="percentage">%</span>
             </div>
@@ -118,29 +158,42 @@ function Statistics({ data, videoData, timestamps, video }) {
           <div className="detailedShots">
             <div className="totalShots">
               <div className="shotNumber">
-                {data
+                {data.makesA.length > 0 ||
+                data.makesB.length > 0 ||
+                data.attemptsA.length > 0 ||
+                data.attemptsB.length > 0
                   ? selectedTeam === "A"
-                    ? data.attemptsA
-                    : data.attemptsB
+                    ? sumArray(data.attemptsA)
+                    : sumArray(data.attemptsB)
                   : "-"}
               </div>
               <div>&nbsp;SHOTS</div>
             </div>
             <div className="shotAttempts">
-              {data
+              {data.makesA.length > 0 ||
+              data.makesB.length > 0 ||
+              data.attemptsA.length > 0 ||
+              data.attemptsB.length > 0
                 ? selectedTeam === "A"
-                  ? `${data.makesA}/${data.attemptsA}`
-                  : `${data.makesB}/${data.attemptsB}`
+                  ? `${sumArray(data.makesA)}/${sumArray(data.attemptsA)}`
+                  : `${sumArray(data.makesB)}/${sumArray(data.attemptsB)}`
                 : "-/-"}
             </div>
           </div>
         </div>
       </div>
-      {data && (
+      {(data.makesA.length > 0 ||
+        data.makesB.length > 0 ||
+        data.attemptsA.length > 0 ||
+        data.attemptsB.length > 0) && (
         <div className="export">
           {/* <div>Export</div>
         <ExportIcon className="exportIcon" /> */}
-          <Export timestamps={timestamps} video={video} />
+          <Export
+            timestamps={timestamps}
+            video={video}
+            isMatch={videoData.isMatch}
+          />
         </div>
       )}
     </div>

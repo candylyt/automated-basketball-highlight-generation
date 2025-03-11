@@ -7,7 +7,7 @@ import "./VideoDisplayPage.css";
 import Statistics from "./components/Statistics";
 import {
   convertTimestampToSeconds,
-  convertMillisecondsToTimestamp,
+  convertTimestamp,
 } from "./components/utils";
 
 Modal.setAppElement("#root");
@@ -75,22 +75,23 @@ function VideoDisplayPage({
       console.log("Shooting detected:", data);
 
       // const timestamp = convertMillisecondsToTimestamp(data.start_time);
+      const timestamp = convertTimestamp(data.start_time);
 
       // Scoring Moments
       if (data.success) {
         // Add the timestamp to Team A
         if (data.team === "A" || !data.team) {
           setScoringTimestampsA((prevTimestamps) => {
-            if (!prevTimestamps.includes(data.start_time)) {
-              return [...prevTimestamps, data.start_time];
+            if (!prevTimestamps.includes(timestamp)) {
+              return [...prevTimestamps, timestamp];
             }
             return prevTimestamps;
           });
         } else {
           // Add the timestamp to Team B
           setScoringTimestampsB((prevTimestamps) => {
-            if (!prevTimestamps.includes(data.start_time)) {
-              return [...prevTimestamps, data.start_time];
+            if (!prevTimestamps.includes(timestamp)) {
+              return [...prevTimestamps, timestamp];
             }
             return prevTimestamps;
           });
@@ -101,16 +102,16 @@ function VideoDisplayPage({
         // Add the timestamp to Team A
         if (data.team === "A" || !data.team) {
           setShootingTimestampsA((prevTimestamps) => {
-            if (!prevTimestamps.includes(data.start_time)) {
-              return [...prevTimestamps, data.start_time];
+            if (!prevTimestamps.includes(timestamp)) {
+              return [...prevTimestamps, timestamp];
             }
             return prevTimestamps;
           });
         } else {
           // Add the timestamp to Team B
           setShootingTimestampsB((prevTimestamps) => {
-            if (!prevTimestamps.includes(data.start_time)) {
-              return [...prevTimestamps, data.start_time];
+            if (!prevTimestamps.includes(timestamp)) {
+              return [...prevTimestamps, timestamp];
             }
             return prevTimestamps;
           });

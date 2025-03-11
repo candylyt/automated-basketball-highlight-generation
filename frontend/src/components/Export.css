@@ -12,10 +12,12 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   z-index: 1000;
   width: 40vw;
-  height: 68vh;
+  max-height: 68vh;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  overflow-y: scroll;
+  scrollbar-width: none;
 }
 
 .overlay {
@@ -78,6 +80,9 @@ h2 {
   display: flex;
   flex-direction: row;
   margin-left: 10px;
+  width: 90%;
+  overflow-x: scroll;
+  scrollbar-width: none;
 }
 
 .timestamp {
@@ -128,13 +133,12 @@ a.disabled {
 }
 
 .close {
-  position: absolute;
-  bottom: 2%;
-  right: 4%;
+  margin-left: 85%;
   background-color: white;
   color: black;
   font-size: medium;
   font-weight: 800;
+  margin-bottom: 10px;
 }
 
 .close:hover {

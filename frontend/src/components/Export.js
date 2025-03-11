@@ -13,7 +13,7 @@ Modal.setAppElement("#root"); // Set the root element for accessibility
 
 const backendPort = process.env.REACT_APP_BACKEND_PORT;
 
-const Export = ({ timestamps, video }) => {
+const Export = ({ timestamps, video, isMatch }) => {
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [selectedTimestamps, setSelectedTimestamps] = useState([]);
   const [processing, setProcessing] = useState(false);
@@ -229,7 +229,11 @@ const Export = ({ timestamps, video }) => {
       >
         <h2>Export Options</h2>
         <label className="stepLabel">Step 1: Select Timestamps</label>
-        <label className="stepLabel">Team A Scoring Moments</label>
+        {isMatch ? (
+          <label className="stepLabel">Team A Scoring Moments</label>
+        ) : (
+          <label className="stepLabel">Scoring Moments</label>
+        )}
         <div className="timestampContainer">
           {timestamps.scoringTimestampsA.map((timestamp, index) => (
             <div key={index} className="timestamp">
@@ -244,6 +248,61 @@ const Export = ({ timestamps, video }) => {
             </div>
           ))}
         </div>
+        {isMatch ? (
+          <label className="stepLabel">Team A Shooting Moments</label>
+        ) : (
+          <label className="stepLabel">Shooting Moments</label>
+        )}
+        <div className="timestampContainer">
+          {timestamps.shootingTimestampsA.map((timestamp, index) => (
+            <div key={index} className="timestamp">
+              <label htmlFor={`timestamp-${index}`}>{timestamp}</label>
+              <input
+                className="timestampCheckbox"
+                type="checkbox"
+                id={`timestamp-${index}`}
+                value={timestamp}
+                onChange={() => handleTimestampSelection(timestamp)}
+              />
+            </div>
+          ))}
+        </div>
+        {isMatch && <label className="stepLabel">Team B Scoring Moments</label>}
+        {isMatch && (
+          <div className="timestampContainer">
+            {timestamps.scoringTimestampsB.map((timestamp, index) => (
+              <div key={index} className="timestamp">
+                <label htmlFor={`timestamp-${index}`}>{timestamp}</label>
+                <input
+                  className="timestampCheckbox"
+                  type="checkbox"
+                  id={`timestamp-${index}`}
+                  value={timestamp}
+                  onChange={() => handleTimestampSelection(timestamp)}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+        {isMatch && (
+          <label className="stepLabel">Team B Shooting Moments</label>
+        )}
+        {isMatch && (
+          <div className="timestampContainer">
+            {timestamps.shootingTimestampsB.map((timestamp, index) => (
+              <div key={index} className="timestamp">
+                <label htmlFor={`timestamp-${index}`}>{timestamp}</label>
+                <input
+                  className="timestampCheckbox"
+                  type="checkbox"
+                  id={`timestamp-${index}`}
+                  value={timestamp}
+                  onChange={() => handleTimestampSelection(timestamp)}
+                />
+              </div>
+            ))}
+          </div>
+        )}
 
         <label className="stepLabel">Step 2: Generate Highlight</label>
         <div>
