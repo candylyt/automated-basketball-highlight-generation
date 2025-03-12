@@ -12,10 +12,11 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   z-index: 1000;
   width: 40vw;
-  height: 68vh;
+  max-height: 68vh;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  overflow-y: auto;
 }
 
 .overlay {
@@ -78,6 +79,9 @@ h2 {
   display: flex;
   flex-direction: row;
   margin-left: 10px;
+  width: 90%;
+  overflow-x: auto;
+  min-height: fit-content;
 }
 
 .timestamp {
@@ -128,13 +132,12 @@ a.disabled {
 }
 
 .close {
-  position: absolute;
-  bottom: 2%;
-  right: 4%;
+  margin-left: 88%;
   background-color: white;
   color: black;
   font-size: medium;
   font-weight: 800;
+  margin-bottom: 10px;
 }
 
 .close:hover {
@@ -160,4 +163,8 @@ a.disabled {
   font-size: medium;
   background-color: navy;
   height: 3.6vh;
+}
+
+.regenerateButton {
+  justify-self: start;
 }

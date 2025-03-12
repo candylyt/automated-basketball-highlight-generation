@@ -5,21 +5,45 @@ import cv2
 import cvzone
 import math
 import numpy as np
-from utils import clean_hoop_pos, clean_ball_pos, detect_score, in_score_region
 import os, shutil
 import yaml
 import datetime
 from pathlib import Path
-from datetime import timedelta
+from datetime import timedelta, datetime
 import time
 from enum import Enum
+
+from utils import (
+    clean_hoop_pos, 
+    clean_ball_pos, 
+    detect_score, 
+    in_score_region,
+    get_time_string
+)
+
+from score_counter import (
+    ScoreCounter,
+    MatchScoreCounter
+)
+
+from logger import (
+    INFO,
+    SOCKET,
+    Logger
+)
 
 # get environment variables
 env = yaml.load(open('config.yaml', 'r'), Loader=yaml.SafeLoader)
 print("Environment variables: ", env)
 
+logger = Logger([
+    INFO
+])
+
+
+
 class ShotDetector:
-    def __init__(self, video_path, on_detect, on_complete, show_vid=False):
+    def __init__(self, video_path, on_detect, on_complete, show_vid=False, **kwargs):
         self.model = YOLO(env['weights_path'], verbose=False)
         self.class_names = env['classes']
         self.colors = [(0, 255, 0), (255, 255, 0), (255, 255, 255), (255, 0, 0), (0, 0, 255)]
@@ -30,7 +54,7 @@ class ShotDetector:
         
         self.cap = cv2.VideoCapture(video_path)
         self.frame_rate = self.cap.get(cv2.CAP_PROP_FPS)
-        print(f"FPS: {self.frame_rate}")
+        logger.log(INFO, f"FPS: {self.frame_rate}")
 
         self.ball_pos = []  # array of tuples ((x_pos, y_pos), frame count, width, height, conf)
         self.hoop_pos = []  # array of tuples ((x_pos, y_pos), frame count, width, height, conf)
@@ -41,12 +65,24 @@ class ShotDetector:
         self.width = int(self.cap.get(3))
         self.height = int(self.cap.get(4))
 
-        print(f"Resolution: {self.width} X {self.height}")
+        logger.log(INFO, f"Resolution: {self.width} X {self.height}")
 
         self.makes = 0
         self.attempts = 0
         self.attempt_cooldown = 0
         self.attempt_time = 0
+
+        self.is_match = kwargs.get('is_match', False)
+        
+        quarters = kwargs.get('quarter_timestamps', [])
+        quarters = [i for i in quarters if i != '']
+        is_switched = kwargs.get('is_switched', False)
+        switch_time = kwargs.get('switch_time', '99:99:99')
+        
+        if not self.is_match:
+            self.score_counter = ScoreCounter(quarters)
+        else:
+            self.score_counter = MatchScoreCounter(quarters, is_switched, switch_time)
 
         # For marking if the ball / rim have been detected in the current frame
         self.ball_detected = False
@@ -65,6 +101,8 @@ class ShotDetector:
         self.save = env['save_video']
         Path(self.screen_shot_path).mkdir(parents=True, exist_ok=True)
 
+
+
         self.attempt_cooldown = 0
         self.timestamp = None
         self.ball_entered = False
@@ -79,7 +117,7 @@ class ShotDetector:
         if self.save:
             output_name = env['output_path'] + '/' + env['input'].split("/")[-1].split('.')[0] + str(datetime.datetime.now()) 
             output_name = output_name.replace(':','-').replace('.','-') + ".mp4"
-            print("Saving results to: ", output_name)
+            logger.log(INFO, "Saving results to: ", output_name)
             self.out = cv2.VideoWriter(output_name,  cv2.VideoWriter_fourcc(*'mp4v'), self.frame_rate, (self.output_width, self.output_height))
         
         start_time = time.time()
@@ -90,7 +128,7 @@ class ShotDetector:
         minutes = int(duration // 60)
         seconds = int(duration % 60)
 
-        print(f"Total processing time: {minutes:02d}:{seconds:02d}")
+        logger.log(INFO, f"Total processing time: {minutes:02d}:{seconds:02d}")
 
     def run(self):
         
@@ -98,7 +136,7 @@ class ShotDetector:
             ret, self.frame = self.cap.read()
 
             if not ret:
-                print("Processing complete")
+                logger.log(INFO, "Processing complete")
                 break
 
             self.timestamp = self.cap.get(cv2.CAP_PROP_POS_MSEC)
@@ -179,7 +217,10 @@ class ShotDetector:
 
 
         # Report score and cleanup upon finish
-        self.on_complete(self.attempts, self.makes)
+        score_report = self.score_counter.report()
+        for k,v in score_report.items():
+            logger.log(INFO, f"{k.ljust(16)} : {v}")
+        self.on_complete(score_report, self.is_match)
         self.cap.release()
         if self.show_vid:
             cv2.destroyAllWindows()
@@ -286,10 +327,13 @@ class ShotDetector:
                     # self.frame = cv2.putText(self.frame, 'DOWN', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
                     if scored:
                         # print(self.ball_pos[-1], self.last_point_in_region, self.hoop_pos[-1])
+                        time_string = get_time_string(self.timestamp)
                         self.makes += 1
                         self.attempts += 1
-                        self.detect_callback(max(0, self.timestamp-3000), self.timestamp+2000, True)
-                        print(f"[{str(timedelta(milliseconds=self.timestamp)).split('.')[0]}] Shot made")
+                        side = self.get_side()
+                        team = self.score_counter.make(time_string, side)
+                        self.detect_callback(get_time_string(self.timestamp-3000), get_time_string(self.timestamp+2000), True, team)
+                        logger.log(INFO, f"[{time_string}] {'Shot made'.ljust(13)} | Side {side} | Team {team}")
                     # else:
                     #     self.detect_callback(max(0, self.timestamp-3000), self.timestamp+2000, False)
                     #     print("attempt made")
@@ -307,10 +351,13 @@ class ShotDetector:
 
                 else:
                     if self.attempt_time >= self.ATTEMPT_DETECTION_INTERVAL:
+                        time_string = get_time_string(self.timestamp)
                         self.overlay_color = (0, 0, 255)
                         self.fade_counter = self.fade_frames
-                        self.detect_callback(max(0, self.timestamp-3000), self.timestamp+2000, False)
-                        print(f"[{str(timedelta(milliseconds=self.timestamp)).split('.')[0]}] Attempt made")
+                        side = self.get_side()
+                        team = self.score_counter.attempt(time_string, side)
+                        self.detect_callback(get_time_string(self.timestamp-3000), get_time_string(self.timestamp+2000), False, team)
+                        logger.log(INFO, f"[{time_string}] {'Attempt made'.ljust(13)} | Side {side} | Team {team}")
                         self.attempts += 1
                         
                         self.attempt_cooldown = self.MISS_ATTEMPT_COOLDOWN
@@ -334,6 +381,18 @@ class ShotDetector:
             alpha = 0.2 * (self.fade_counter / self.fade_frames)
             self.frame = cv2.addWeighted(self.frame, 1 - alpha, np.full_like(self.frame, self.overlay_color), alpha, 0)
             self.fade_counter -= 1
+
+    def get_side(self):
+        if len(self.hoop_pos):
+            return 1 if self.hoop_pos[-1][0][0] > self.width/2 else 0
+
+        return None
+    
+def get_time_string(timestamp):
+    timestamp = max(0, timestamp)
+
+    t = str(timedelta(milliseconds=timestamp)).split('.')[0]
+    return datetime.strptime(t, "%H:%M:%S").strftime('%H:%M:%S')
 
 
 if __name__ == "__main__":
