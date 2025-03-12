@@ -1,9 +1,10 @@
-# weights_path: "weights/20250115best.pt"
-weights_path: "weights/03102025_best.pt"
-weights_path_shoot: "/home/fyp_gch6/candy/best_ba.pt"
+weights_path: "weights/20250115best.pt"
+# weights_path: "weights/03102025_best.pt"
+weights_path_shoot: "weights/03102025_best.pt"
 classes: ["ball", "person", "rim", "shoot"]
-input: "uploads/nba1.mp4"
+# input: "uploads/nba1.mp4"
 # input: 'uploads/amateur2.mp4'
+input: "/home/fyp_gch6/jason/testing_video/jch_4.MP4"
 save_video: False
 output_path: "output"
 upload_path: "uploads"

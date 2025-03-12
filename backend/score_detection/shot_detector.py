@@ -21,6 +21,7 @@ print("Environment variables: ", env)
 class ShotDetector:
     def __init__(self, video_path, on_detect, on_complete, show_vid=False):
         self.model = YOLO(env['weights_path'], verbose=False)
+        self.model_shoot = YOLO(env['weights_path_shoot'], verbose=False)
         self.class_names = env['classes']
         self.colors = [(0, 255, 0), (255, 255, 0), (255, 255, 255), (255, 0, 0), (0, 0, 255)]
         self.detect_callback = on_detect
