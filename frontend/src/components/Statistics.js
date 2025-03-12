@@ -63,8 +63,8 @@ function Statistics({ data, videoData, timestamps, video }) {
                 data.attemptsA.length > 0 ||
                 data.attemptsB.length > 0
                   ? selectedTeam === "A"
-                    ? data.attemptsA
-                    : data.attemptsB
+                    ? sumArray(data.attemptsA)
+                    : sumArray(data.attemptsB)
                   : "-"}
               </div>
               <div>&nbsp;SHOTS</div>
