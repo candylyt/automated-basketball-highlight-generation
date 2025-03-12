@@ -36,8 +36,8 @@ export const convertTimestampToSeconds = (timestamp) => {
 };
 
 export const validateTimestamp = (timestamp) => {
-  const hhmmssPattern = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/;
-  const mmssPattern = /^[0-5]?[0-9]:[0-5][0-9]$/;
+  const hhmmssPattern = /^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/;
+  const mmssPattern = /^[0-5][0-9]:[0-5][0-9]$/;
   return hhmmssPattern.test(timestamp) || mmssPattern.test(timestamp);
 };
 
