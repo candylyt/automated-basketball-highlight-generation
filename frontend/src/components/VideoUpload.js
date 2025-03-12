@@ -33,7 +33,7 @@ function VideoUpload({
     formData.append("isMatch", videoData.isMatch);
     formData.append("isSwitched", videoData.isSwitched);
     formData.append("switchTimestamp", videoData.switchTimestamp);
-    formData.append("quarterTimestamps", videoData.quarterTimestamps);
+    formData.append("quarterTimestamps", videoData.formattedTimestamps);
 
     try {
       const response = await fetch(`${backendPort}/upload`, {
