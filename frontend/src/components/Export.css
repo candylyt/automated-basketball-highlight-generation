@@ -132,7 +132,7 @@ a.disabled {
 }
 
 .close {
-  margin-left: 85%;
+  margin-left: 88%;
   background-color: white;
   color: black;
   font-size: medium;
@@ -163,4 +163,8 @@ a.disabled {
   font-size: medium;
   background-color: navy;
   height: 3.6vh;
+}
+
+.regenerateButton {
+  justify-self: start;
 }

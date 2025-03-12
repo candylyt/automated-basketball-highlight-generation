@@ -306,12 +306,20 @@ const Export = ({ timestamps, video, isMatch }) => {
 
         <label className="stepLabel">Step 2: Generate Highlight</label>
         <div>
-          {!highlightVideo && (
+          {highlightVideo ? (
+            <button
+              className="regenerateButton"
+              onClick={handleTrim}
+              disabled={processing || selectedTimestamps.length <= 0}
+            >
+              {processing ? "Processing..." : "Regenerate"}
+            </button>
+          ) : (
             <button
               onClick={handleTrim}
               disabled={processing || selectedTimestamps.length <= 0}
             >
-              {processing ? "Processing..." : "Start"}
+              {processing ? "Processing..." : "Start Generating"}
             </button>
           )}
           {highlightVideo && (
