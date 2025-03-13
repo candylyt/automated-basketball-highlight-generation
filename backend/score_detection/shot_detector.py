@@ -47,11 +47,17 @@ class ShotDetector:
         self.model = YOLO(env['weights_path'], verbose=False)
         self.model_shoot = YOLO(env['weights_path_shoot'], verbose=False)
         self.class_names = env['classes']
+        self.class_names_shoot = env['classes_shoot']
         self.colors = [(0, 255, 0), (255, 255, 0), (255, 255, 255), (255, 0, 0), (0, 0, 255)]
+        self.colors_shoot = [(0, 255, 0), (255, 255, 255), (255, 0, 0), (0, 0, 255)]
         self.detect_callback = on_detect
         self.on_complete = on_complete
         self.show_vid = show_vid
 
+        # for debug
+        self.video_name = video_path.split("/")[-1].replace(".mp4", "")
+        self.output_frames_dir = f"shot_frames_{self.video_name}"
+        os.makedirs(self.output_frames_dir, exist_ok=True)
         
         self.cap = cv2.VideoCapture(video_path)
         self.frame_rate = self.cap.get(cv2.CAP_PROP_FPS)
@@ -59,7 +65,8 @@ class ShotDetector:
 
         self.ball_pos = []  # array of tuples ((x_pos, y_pos), frame count, width, height, conf)
         self.hoop_pos = []  # array of tuples ((x_pos, y_pos), frame count, width, height, conf)
-
+        self.frame_track = [] # array of tuples (det_frame, timestamp)
+        self.num_frames_to_track = 2 * self.frame_rate # 2 seconds before
         self.frame_count = 0
         self.frame = None
 
@@ -88,7 +95,7 @@ class ShotDetector:
         # For marking if the ball / rim have been detected in the current frame
         self.ball_detected = False
         self.rim_detected = False
-
+        self.should_detect_shot = False
         # Used for green and red colors after make/miss
         self.fade_frames = 20
         self.fade_counter = 0
@@ -193,6 +200,22 @@ class ShotDetector:
 
             self.clean_motion()
             self.score_detection()
+            
+            # after score detection, detect shoot
+            # Track frames and timestamps
+            if len(self.frame_track) >= self.num_frames_to_track:
+                self.frame_track.pop(0)
+            self.frame_track.append((det_frame, self.timestamp))
+
+            # Check if shooting moment was captured
+            if self.should_detect_shot:
+                shot_timestamp = self.shot_detection()
+                if shot_timestamp:
+                    logger.log(INFO, f"Shot detected at {shot_timestamp}")
+                self.should_detect_shot = False
+
+            
+
             # self.display_score()
             self.frame_count += 1
 
@@ -334,6 +357,7 @@ class ShotDetector:
                         side = self.get_side()
                         team = self.score_counter.make(time_string, side)
                         self.detect_callback(get_time_string(self.timestamp-3000), get_time_string(self.timestamp+2000), True, team)
+                        self.should_detect_shot = True
                         logger.log(INFO, f"[{time_string}] {'Shot made'.ljust(13)} | Side {side} | Team {team}")
                     # else:
                     #     self.detect_callback(max(0, self.timestamp-3000), self.timestamp+2000, False)
@@ -358,6 +382,7 @@ class ShotDetector:
                         side = self.get_side()
                         team = self.score_counter.attempt(time_string, side)
                         self.detect_callback(get_time_string(self.timestamp-3000), get_time_string(self.timestamp+2000), False, team)
+                        self.should_detect_shot = True
                         logger.log(INFO, f"[{time_string}] {'Attempt made'.ljust(13)} | Side {side} | Team {team}")
                         self.attempts += 1
                         
@@ -369,7 +394,52 @@ class ShotDetector:
                     self.ball_entered = False
                     self.last_point_in_region = None
 
+    def shot_detection(self):
+        """Detect shooting motion in previous frames"""
+        shoot_timestamps = []
+        for frame, timestamp in self.frame_track:
+            results = self.model_shoot(frame, stream=True, verbose=False, imgsz=1280)
+            has_shoot = False
+            # Logic to identify shooting motion
+            for r in results:                
+                # Check if class 3 (shoot) is detected
+                boxes = sorted([(box.xyxy[0], box.conf, box.cls) for box in r.boxes], key=lambda x: -x[1])
+                # ball_boxes = []
+                # person_boxes = []
+                # rim_boxes = []
+                # shoot_boxes = []
+                for box in boxes:
+                    # # Iterate through all detections and store coordinates based on class
+                    cls = int(box[2])  # box[2] contains class index
+                    # coords = box[0].tolist()  # box[0] contains coordinates
+                    # conf_score = float(box[1])  # box[1] contains confidence score
+                    
+                    # if cls == 0:  # ball
+                    #     # Only append if confidence > 0.6 and no ball detection yet
+                    #     if conf_score > 0.6 and not ball_boxes:
+                    #         ball_boxes.append(coords)
+                    # elif cls == 1:  # person
+                    #     # No restrictions for person class
+                    #     person_boxes.append(coords)
+                    # elif cls == 2:  # rim
+                    #     # Only take first rim detection
+                    #     if not rim_boxes:
+                    #         rim_boxes.append(coords)
+                    # elif cls == 3:  # shoot
+                    #     # Only take first shoot detection
+                    #     if not shoot_boxes:
+                    #         shoot_boxes.append(coords)
+                    #         shoot_timestamps.append(get_time_string(timestamp))
+                    if cls == 3:
+                        has_shoot = True
+                        break
+            if has_shoot:
+                # Save annotated frame as image if shoot detected
+                annotated_frame = r.plot()
+                frame_filename = os.path.join(self.output_frames_dir, f"{get_time_string(timestamp)}_frame.jpg")
+                cv2.imwrite(frame_filename, annotated_frame)
 
+        return shoot_timestamps if shoot_timestamps else None
     def display_score(self):
         # Add text
         text = str(self.makes) + " / " + str(self.attempts)
@@ -397,7 +467,7 @@ def get_time_string(timestamp):
 
 
 if __name__ == "__main__":
-    ShotDetector(env['input'], lambda x,y,z: 0, lambda x, y: print(f"Shot made: {y}\n Attempts: {x}\n Success rate: {y/x*100}%"), False)
+    ShotDetector(env['input'], lambda x,y,z,k: 0, lambda x, y: print(f"Shot made: {y}\n Attempts: {x}\n Success rate: {y/x*100}%"), False)
     # def __init__(self, video_path, on_detect, on_complete, show_vid=False):
 
 
