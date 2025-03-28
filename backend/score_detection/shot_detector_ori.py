@@ -45,19 +45,12 @@ logger = Logger([
 class ShotDetector:
     def __init__(self, video_path, on_detect, on_complete, show_vid=False, **kwargs):
         self.model = YOLO(env['weights_path'], verbose=False)
-        self.model_shoot = YOLO(env['weights_path_shoot'], verbose=False)
         self.class_names = env['classes']
-        self.class_names_shoot = env['classes_shoot']
         self.colors = [(0, 255, 0), (255, 255, 0), (255, 255, 255), (255, 0, 0), (0, 0, 255)]
-        self.colors_shoot = [(0, 255, 0), (255, 255, 255), (255, 0, 0), (0, 0, 255)]
         self.detect_callback = on_detect
         self.on_complete = on_complete
         self.show_vid = show_vid
 
-        # for debug
-        self.video_name = video_path.split("/")[-1].replace(".mp4", "")
-        self.output_frames_dir = f"shot_frames_{self.video_name}"
-        os.makedirs(self.output_frames_dir, exist_ok=True)
         
         self.cap = cv2.VideoCapture(video_path)
         self.frame_rate = self.cap.get(cv2.CAP_PROP_FPS)
@@ -65,8 +58,7 @@ class ShotDetector:
 
         self.ball_pos = []  # array of tuples ((x_pos, y_pos), frame count, width, height, conf)
         self.hoop_pos = []  # array of tuples ((x_pos, y_pos), frame count, width, height, conf)
-        self.frame_track = [] # array of tuples (det_frame, timestamp)
-        self.num_frames_to_track = 2 * self.frame_rate # 2 seconds before
+
         self.frame_count = 0
         self.frame = None
 
@@ -95,7 +87,7 @@ class ShotDetector:
         # For marking if the ball / rim have been detected in the current frame
         self.ball_detected = False
         self.rim_detected = False
-        self.should_detect_shot = False
+
         # Used for green and red colors after make/miss
         self.fade_frames = 20
         self.fade_counter = 0
@@ -153,9 +145,10 @@ class ShotDetector:
             # resize to match - force 1280 and 720 for better model results
             det_frame = cv2.resize(self.frame, (1280, 720))
 
-            results = self.model_shoot(det_frame, stream=True, verbose=False, imgsz=1280)
+            results = self.model(det_frame, stream=True, verbose=False, imgsz=1280)
 
             for r in results:
+
                 #TODO: better way to get max conf boxes only
                 boxes = sorted([(box.xyxy[0], box.conf, box.cls) for box in r.boxes], key=lambda x: -x[1])
                 #sort and get only top prediction for ball / hoop
@@ -163,23 +156,12 @@ class ShotDetector:
                 # Reset detection variables
                 self.ball_detected, self.rim_detected = False, False
 
-                # Define confidence thresholds for each class
-                conf_thresholds = {
-                    'rim': 0.4,
-                    'basketball': 0.4,
-                    'shoot': 0.3,
-                    'person': 0.35
-                }
-
-                # Store bounding box info for each class
-                frame_boxes = {
-                    'rim': None,
-                    'basketball': None,
-                    'shoot': None,
-                    'person': []
-                }
-
                 for box in boxes:
+                    
+                    # Only one ball / rim should be detected per frame
+                    if self.ball_detected and self.rim_detected:
+                        break
+                    
                     # Bounding box
                     x1, y1, x2, y2 = box[0]
 
@@ -196,46 +178,20 @@ class ShotDetector:
 
                     center = (int(x1 + w / 2), int(y1 + h / 2))
 
-                    # Store box info based on class and confidence threshold
-                    if current_class in conf_thresholds and conf > conf_thresholds[current_class]:
-                        box_info = {
-                            'center': center,
-                            'width': w,
-                            'height': h,
-                            'confidence': conf,
-                            'coords': (x1, y1, x2, y2)
-                        }
+                    if (conf > 0.4 and current_class == 'rim' and not self.rim_detected) or (conf > 0.4 and current_class == 'basketball' and not self.ball_detected):
 
-                        if current_class == 'rim' and not frame_boxes['rim']:
-                            frame_boxes['rim'] = box_info
+                        if self.show_vid or self.save or self.screenshot:
+                            self.draw_bounding_box(current_class, conf, cls, x1, y1, x2, y2)
+                        
+                        if current_class == 'rim':
                             self.rim_detected = True
                             self.hoop_pos.append((center, self.frame_count, w, h, conf))
-                        elif current_class == 'basketball' and not frame_boxes['basketball']:
-                            frame_boxes['basketball'] = box_info
+                        elif current_class == 'basketball':
                             self.ball_detected = True
                             self.ball_pos.append((center, self.frame_count, w, h, conf))
-                        elif current_class == 'shoot' and not frame_boxes['shoot']:
-                            frame_boxes['shoot'] = box_info
-                        elif current_class == 'person':
-                            frame_boxes['person'].append(box_info)
 
             self.clean_motion()
             self.score_detection()
-            
-            # Store frame boxes info instead of frame
-            if len(self.frame_track) >= self.num_frames_to_track:
-                self.frame_track.pop(0)
-            self.frame_track.append((frame_boxes,self.frame_count, self.timestamp, det_frame))
-
-            # Check if shooting moment was captured
-            if self.should_detect_shot:
-                shot_location, shot_timestamp = self.shot_detection()
-                if shot_timestamp:
-                    logger.log(INFO, f"Shot detected at {shot_timestamp}")
-                self.should_detect_shot = False
-
-            
-
             # self.display_score()
             self.frame_count += 1
 
@@ -243,7 +199,7 @@ class ShotDetector:
                 self.attempt_cooldown -= 1
 
             if self.show_vid or self.save or self.screenshot:
-                # self.draw_overlay()
+                self.draw_overlay()
 
                 if self.show_vid:
                     cv2.imshow('Frame', self.frame)
@@ -270,67 +226,67 @@ class ShotDetector:
             cv2.destroyAllWindows()
         
 
-    # # Function to draw bounding box for ball and rim
-    # def draw_bounding_box(self, current_class, conf, cls, x1, y1, x2, y2):
+    # Function to draw bounding box for ball and rim
+    def draw_bounding_box(self, current_class, conf, cls, x1, y1, x2, y2):
                         
-    #     label = f"{current_class}: {conf}"
-    #     color = self.colors[cls]
+        label = f"{current_class}: {conf}"
+        color = self.colors[cls]
 
-    #     self.frame = cv2.rectangle(self.frame, (x1, y1), (x2, y2), color, 2)
+        self.frame = cv2.rectangle(self.frame, (x1, y1), (x2, y2), color, 2)
 
-    #     (text_w, text_h), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 1)
-    #     self.frame = cv2.rectangle(self.frame, (x1, y1 - 20), (x1 + text_w, y1), color, -1)
-    #     self.frame = cv2.putText(self.frame, label, (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
+        (text_w, text_h), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 1)
+        self.frame = cv2.rectangle(self.frame, (x1, y1 - 20), (x1 + text_w, y1), color, -1)
+        self.frame = cv2.putText(self.frame, label, (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
 
-    # # Function to draw overlay elements, mainly for debugging purposes
-    # def draw_overlay(self):
-    #     if self.hoop_pos and self.rim_detected:
-    #         # draw score-region
-    #         x1 = self.hoop_pos[-1][0][0] - 2  * self.hoop_pos[-1][2]
-    #         x2 = self.hoop_pos[-1][0][0] + 2  * self.hoop_pos[-1][2]
-    #         y1 = self.hoop_pos[-1][0][1] - 3.5  * self.hoop_pos[-1][3]
-    #         y2 = self.hoop_pos[-1][0][1] + 0.9 * self.hoop_pos[-1][3]
+    # Function to draw overlay elements, mainly for debugging purposes
+    def draw_overlay(self):
+        if self.hoop_pos and self.rim_detected:
+            # draw score-region
+            x1 = self.hoop_pos[-1][0][0] - 2  * self.hoop_pos[-1][2]
+            x2 = self.hoop_pos[-1][0][0] + 2  * self.hoop_pos[-1][2]
+            y1 = self.hoop_pos[-1][0][1] - 3.5  * self.hoop_pos[-1][3]
+            y2 = self.hoop_pos[-1][0][1] + 0.9 * self.hoop_pos[-1][3]
 
-    #         pts = np.array([[x1, y1], [x2,y1], [x2, y2], [x1, y2]], np.int32)
+            pts = np.array([[x1, y1], [x2,y1], [x2, y2], [x1, y2]], np.int32)
 
-    #         pts = pts.reshape((-1, 1, 2))
+            pts = pts.reshape((-1, 1, 2))
 
-    #         self.frame = cv2.polylines(self.frame, [pts], True, (255, 0, 255), 3)
+            self.frame = cv2.polylines(self.frame, [pts], True, (255, 0, 255), 3)
 
-    #         #draw hoop-line
-    #         hoop_y = self.hoop_pos[-1][0][1]
-    #         x1 = self.hoop_pos[-1][0][0] - 0.5 * self.hoop_pos[-1][2]
-    #         x2 = self.hoop_pos[-1][0][0] + 0.5 * self.hoop_pos[-1][2]
+            #draw hoop-line
+            hoop_y = self.hoop_pos[-1][0][1]
+            x1 = self.hoop_pos[-1][0][0] - 0.5 * self.hoop_pos[-1][2]
+            x2 = self.hoop_pos[-1][0][0] + 0.5 * self.hoop_pos[-1][2]
 
-    #         pts = np.array([[x1, hoop_y], [x2, hoop_y]], np.int32)
+            pts = np.array([[x1, hoop_y], [x2, hoop_y]], np.int32)
 
-    #         pts = pts.reshape((-1, 1, 2))
+            pts = pts.reshape((-1, 1, 2))
 
-    #         self.frame = cv2.polylines(self.frame, [pts], True, (0, 255, 255), 2)
+            self.frame = cv2.polylines(self.frame, [pts], True, (0, 255, 255), 2)
 
         #draw timestamp
         timestring = str(timedelta(milliseconds=self.timestamp)).split('.')[0]
         cv2.putText(self.frame, timestring, (int(self.width*0.9), 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 2)
         cv2.putText(self.frame, timestring, (int(self.width*0.9), 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 4)
 
-        # #display ball trajectory
-        # for i in range(0, len(self.ball_pos)):
-        #     color = (0, 0, 255) if i == len(self.ball_pos)-1 else (100, 100, 100, 0.5)
-        #     thickness = 5 if i == len(self.ball_pos)-1 else 2
+        #display ball trajectory
+        for i in range(0, len(self.ball_pos)):
+            color = (0, 0, 255) if i == len(self.ball_pos)-1 else (100, 100, 100, 0.5)
+            thickness = 5 if i == len(self.ball_pos)-1 else 2
                 
-        #     cv2.circle(self.frame, self.ball_pos[i][0], 2, color, thickness)
+            cv2.circle(self.frame, self.ball_pos[i][0], 2, color, thickness)
 
-        # #draw lines between ball positions in consecutive frames
-        # if len(self.ball_pos) > 1 and self.ball_detected:
-        #     if self.last_point_in_region:
-        #         x1, x2 = self.ball_pos[-1][0][0], self.ball_pos[-1][0][1]
-        #         y1, y2 = self.last_point_in_region[0][0], self.last_point_in_region[0][1]
+        #draw lines between ball positions in consecutive frames
+        if len(self.ball_pos) > 1 and self.ball_detected:
+            if self.last_point_in_region:
+                x1, x2 = self.ball_pos[-1][0][0], self.ball_pos[-1][0][1]
+                y1, y2 = self.last_point_in_region[0][0], self.last_point_in_region[0][1]
 
-        #         pts = np.array([[x1, x2], [y1, y2]], np.int32)
+                pts = np.array([[x1, x2], [y1, y2]], np.int32)
         
-        #         pts = pts.reshape((-1, 1, 2))
+                pts = pts.reshape((-1, 1, 2))
 
-        #         cv2.polylines(self.frame, [pts], True, (0, 0, 255), 2)
+                cv2.polylines(self.frame, [pts], True, (0, 0, 255), 2)
 
         self.display_score()
 
@@ -377,7 +333,6 @@ class ShotDetector:
                         side = self.get_side()
                         team = self.score_counter.make(time_string, side)
                         self.detect_callback(get_time_string(self.timestamp-3000), get_time_string(self.timestamp+2000), True, team)
-                        self.should_detect_shot = True
                         logger.log(INFO, f"[{time_string}] {'Shot made'.ljust(13)} | Side {side} | Team {team}")
                     # else:
                     #     self.detect_callback(max(0, self.timestamp-3000), self.timestamp+2000, False)
@@ -402,7 +357,6 @@ class ShotDetector:
                         side = self.get_side()
                         team = self.score_counter.attempt(time_string, side)
                         self.detect_callback(get_time_string(self.timestamp-3000), get_time_string(self.timestamp+2000), False, team)
-                        self.should_detect_shot = True
                         logger.log(INFO, f"[{time_string}] {'Attempt made'.ljust(13)} | Side {side} | Team {team}")
                         self.attempts += 1
                         
@@ -413,117 +367,7 @@ class ShotDetector:
                     self.attempt_time = 0
                     self.ball_entered = False
                     self.last_point_in_region = None
-    def shot_detection(self):
-        """
-        Detect shooting motion in previous frames and identify the exact shooting moment.
-        Returns the timestamp of the shooting moment if found, None otherwise.
-        """
-        shot_location = None
-        shooter_positions = []
-        debug_timestamp = None
-        debug_frame = None
-        # Step 1: Find frames with "shoot" class
-        for frame_data in self.frame_track:
-            frame_boxes, frame_count, timestamp, det_frame = frame_data
-            
-            if frame_boxes['shoot']:
-                shoot_box = frame_boxes['shoot']  # Only one shoot box                
-                # Step 2: Find nearest person to the shoot box by calculating overlap
-                if frame_boxes['person']:
-                    person_boxes = frame_boxes['person']
-                    
-                    max_overlap = 0
-                    closest_person = None
-                    
-                    # Get shoot box coordinates (y increases downward)
-                    x1_shoot = shoot_box['coords'][0]  # Left
-                    y1_shoot = shoot_box['coords'][1]  # Top
-                    x2_shoot = shoot_box['coords'][2]  # Right 
-                    y2_shoot = shoot_box['coords'][3]  # Bottom
-                    
-                    for person_box in person_boxes:
-                        # Get person box coordinates (y increases downward)
-                        x1_person = person_box['coords'][0]  # Left
-                        y1_person = person_box['coords'][1]  # Top
-                        x2_person = person_box['coords'][2]  # Right
-                        y2_person = person_box['coords'][3]  # Bottom
-                        
-                        # Calculate intersection
-                        # x_left is the rightmost of the left edges
-                        x_left = max(x1_shoot, x1_person)
-                        # y_top is the bottommost of the top edges
-                        y_top = max(y1_shoot, y1_person)
-                        # x_right is the leftmost of the right edges
-                        x_right = min(x2_shoot, x2_person)
-                        # y_bottom is the topmost of the bottom edges
-                        y_bottom = min(y2_shoot, y2_person)
-                        
-                        if x_right > x_left and y_bottom > y_top:
-                            overlap_area = (x_right - x_left) * (y_bottom - y_top)
-                            if overlap_area > max_overlap:
-                                max_overlap = overlap_area
-                                closest_person = person_box
-                    
-                    # Calculate shoot box area
-                    shoot_box_area = (x2_shoot - x1_shoot) * (y2_shoot - y1_shoot)
-                    if closest_person and max_overlap >= 0.8 * shoot_box_area:
-                        # shooting_moments.append((timestamp, timestamp))
-                        # record the person's bottom-center position in the frame
-                        x1, y1, x2, y2 = closest_person['coords']
-                        bottom_center_x = x1 + (x2 - x1) // 2  # Center x coordinate
-                        bottom_center_y = y2  # Bottom y coordinate
-                        shooter_positions.append((bottom_center_x, bottom_center_y))
-                        if not debug_timestamp:
-                            debug_timestamp = timestamp
-                            debug_frame = det_frame
 
-        # Step 3: Use IQR to filter outliers
-        # By collecting all the possible shooting positions, we calculate the average position of "the shooter"
-        # remove outlier to avoid false positive
-        if shooter_positions:
-            x_coords = [pos[0] for pos in shooter_positions]
-            y_coords = [pos[1] for pos in shooter_positions]
-            
-            # Calculate Q1, Q3 and IQR for both x and y coordinates
-            q1_x, q3_x = np.percentile(x_coords, [25, 75])
-            q1_y, q3_y = np.percentile(y_coords, [25, 75])
-            iqr_x = q3_x - q1_x
-            iqr_y = q3_y - q1_y
-            
-            # Define bounds
-            x_lower = q1_x - 1.5 * iqr_x
-            x_upper = q3_x + 1.5 * iqr_x
-            y_lower = q1_y - 1.5 * iqr_y
-            y_upper = q3_y + 1.5 * iqr_y
-            
-            # Filter out outliers
-            filtered_positions = [
-                pos for pos in shooter_positions 
-                if (x_lower <= pos[0] <= x_upper and y_lower <= pos[1] <= y_upper)
-            ]
-            
-            if filtered_positions:
-                # Calculate average position
-                avg_x = sum(pos[0] for pos in filtered_positions) / len(filtered_positions)
-                avg_y = sum(pos[1] for pos in filtered_positions) / len(filtered_positions)
-                shot_location = (avg_x, avg_y)
-        
-            # Plot shot location on debug frame if available
-            if debug_frame is not None and shot_location is not None:
-                # Convert coordinates to integers for cv2
-                plot_x = int(avg_x)
-                plot_y = int(avg_y)
-                
-                # Draw red circle at shot location
-                cv2.circle(debug_frame, (plot_x, plot_y), 5, (0,0,255), -1)
-                
-                # Save the annotated frame
-                output_path = os.path.join(self.output_frames_dir, f"shot_{debug_timestamp}.jpg")
-                cv2.imwrite(output_path, debug_frame)
-            return shot_location, debug_timestamp
-
-        return None, None
-                
 
     def display_score(self):
         # Add text

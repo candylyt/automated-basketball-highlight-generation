@@ -7,7 +7,10 @@ classes_shoot: ["ball", "person", "rim", "shoot"]
 # input: 'uploads/amateur2.mp4'
 # input: "/home/fyp_gch6/jason/testing_video/jch_4.MP4"
 # input: "/home/fyp_gch6/jason/testing_video/nba_3.mp4"
-input: "/home/fyp_gch6/jason/testing_video/aia_girl.mp4"
+# input: "/home/fyp_gch6/jason/testing_video/amateur_line.mp4"
+# input: "/home/fyp_gch6/jason/data_gen_vids/hl_prof_2_converted.mp4"
+input: "/home/fyp_gch6/jason/data_gen_vids/fg_ama_la_1_converted.mp4"
+
 
 save_video: False
 output_path: "output"
