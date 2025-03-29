@@ -23,7 +23,8 @@
 }
 
 .Question-header {
-  font-size: calc(5px + 2vmin);
+  /* font-size: calc(5px + 2vmin); */
+  font-size: 1.8rem;
   margin-bottom: 20px;
   /* justify-self: center; */
   font-weight: 600;

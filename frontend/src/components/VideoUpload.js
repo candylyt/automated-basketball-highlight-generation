@@ -5,6 +5,7 @@ import { ReactComponent as VideoUploadIcon } from "../assets/videoUploadIcon.svg
 import { FileUploader } from "react-drag-drop-files";
 import "./VideoUpload.css";
 import Questions from "./Questions";
+import UserGuide from "./UserGuide";
 
 const fileTypes = ["MP4"];
 const backendPort = process.env.REACT_APP_BACKEND_PORT;
@@ -17,11 +18,13 @@ function VideoUpload({
   setVideoData,
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
 
   const handleChange = async (video) => {
     setIsUploading(true);
     setFile(video);
-    setIsModalOpen(true);
+    setIsGuideModalOpen(true);
+    // setIsModalOpen(true);
   };
 
   const handleModalSubmit = async (videoData) => {
@@ -75,6 +78,14 @@ function VideoUpload({
           <div className="VU-alternative">Or drag and drop a video here</div>
         </div>
       </FileUploader>
+      <UserGuide
+        isOpen={isGuideModalOpen}
+        onRequestClose={() => setIsGuideModalOpen(false)}
+        onSubmit={() => {
+          setIsGuideModalOpen(false);
+          setIsModalOpen(true);
+        }}
+      />
       <Questions
         isOpen={isModalOpen}
         onRequestClose={() => setIsModalOpen(false)}
