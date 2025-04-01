@@ -280,67 +280,67 @@ class ShotDetector:
             cv2.destroyAllWindows()
         
 
-    # # Function to draw bounding box for ball and rim
-    # def draw_bounding_box(self, current_class, conf, cls, x1, y1, x2, y2):
+    # Function to draw bounding box for ball and rim
+    def draw_bounding_box(self, current_class, conf, cls, x1, y1, x2, y2):
                         
-    #     label = f"{current_class}: {conf}"
-    #     color = self.colors[cls]
+        label = f"{current_class}: {conf}"
+        color = self.colors[cls]
 
-    #     self.frame = cv2.rectangle(self.frame, (x1, y1), (x2, y2), color, 2)
+        self.frame = cv2.rectangle(self.frame, (x1, y1), (x2, y2), color, 2)
 
-    #     (text_w, text_h), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 1)
-    #     self.frame = cv2.rectangle(self.frame, (x1, y1 - 20), (x1 + text_w, y1), color, -1)
-    #     self.frame = cv2.putText(self.frame, label, (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
+        (text_w, text_h), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 1)
+        self.frame = cv2.rectangle(self.frame, (x1, y1 - 20), (x1 + text_w, y1), color, -1)
+        self.frame = cv2.putText(self.frame, label, (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
 
-    # # Function to draw overlay elements, mainly for debugging purposes
-    # def draw_overlay(self):
-    #     if self.hoop_pos and self.rim_detected:
-    #         # draw score-region
-    #         x1 = self.hoop_pos[-1][0][0] - 2  * self.hoop_pos[-1][2]
-    #         x2 = self.hoop_pos[-1][0][0] + 2  * self.hoop_pos[-1][2]
-    #         y1 = self.hoop_pos[-1][0][1] - 3.5  * self.hoop_pos[-1][3]
-    #         y2 = self.hoop_pos[-1][0][1] + 0.9 * self.hoop_pos[-1][3]
+    # Function to draw overlay elements, mainly for debugging purposes
+    def draw_overlay(self):
+        if self.hoop_pos and self.rim_detected:
+            # draw score-region
+            x1 = self.hoop_pos[-1][0][0] - 2  * self.hoop_pos[-1][2]
+            x2 = self.hoop_pos[-1][0][0] + 2  * self.hoop_pos[-1][2]
+            y1 = self.hoop_pos[-1][0][1] - 3.5  * self.hoop_pos[-1][3]
+            y2 = self.hoop_pos[-1][0][1] + 0.9 * self.hoop_pos[-1][3]
 
-    #         pts = np.array([[x1, y1], [x2,y1], [x2, y2], [x1, y2]], np.int32)
+            pts = np.array([[x1, y1], [x2,y1], [x2, y2], [x1, y2]], np.int32)
 
-    #         pts = pts.reshape((-1, 1, 2))
+            pts = pts.reshape((-1, 1, 2))
 
-    #         self.frame = cv2.polylines(self.frame, [pts], True, (255, 0, 255), 3)
+            self.frame = cv2.polylines(self.frame, [pts], True, (255, 0, 255), 3)
 
-    #         #draw hoop-line
-    #         hoop_y = self.hoop_pos[-1][0][1]
-    #         x1 = self.hoop_pos[-1][0][0] - 0.5 * self.hoop_pos[-1][2]
-    #         x2 = self.hoop_pos[-1][0][0] + 0.5 * self.hoop_pos[-1][2]
+            #draw hoop-line
+            hoop_y = self.hoop_pos[-1][0][1]
+            x1 = self.hoop_pos[-1][0][0] - 0.5 * self.hoop_pos[-1][2]
+            x2 = self.hoop_pos[-1][0][0] + 0.5 * self.hoop_pos[-1][2]
 
-    #         pts = np.array([[x1, hoop_y], [x2, hoop_y]], np.int32)
+            pts = np.array([[x1, hoop_y], [x2, hoop_y]], np.int32)
 
-    #         pts = pts.reshape((-1, 1, 2))
+            pts = pts.reshape((-1, 1, 2))
 
-    #         self.frame = cv2.polylines(self.frame, [pts], True, (0, 255, 255), 2)
+            self.frame = cv2.polylines(self.frame, [pts], True, (0, 255, 255), 2)
 
         #draw timestamp
         timestring = str(timedelta(milliseconds=self.timestamp)).split('.')[0]
         cv2.putText(self.frame, timestring, (int(self.width*0.9), 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 2)
         cv2.putText(self.frame, timestring, (int(self.width*0.9), 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 4)
 
-        # #display ball trajectory
-        # for i in range(0, len(self.ball_pos)):
-        #     color = (0, 0, 255) if i == len(self.ball_pos)-1 else (100, 100, 100, 0.5)
-        #     thickness = 5 if i == len(self.ball_pos)-1 else 2
+        #display ball trajectory
+        for i in range(0, len(self.ball_pos)):
+            color = (0, 0, 255) if i == len(self.ball_pos)-1 else (100, 100, 100, 0.5)
+            thickness = 5 if i == len(self.ball_pos)-1 else 2
                 
-        #     cv2.circle(self.frame, self.ball_pos[i][0], 2, color, thickness)
+            cv2.circle(self.frame, self.ball_pos[i][0], 2, color, thickness)
 
-        # #draw lines between ball positions in consecutive frames
-        # if len(self.ball_pos) > 1 and self.ball_detected:
-        #     if self.last_point_in_region:
-        #         x1, x2 = self.ball_pos[-1][0][0], self.ball_pos[-1][0][1]
-        #         y1, y2 = self.last_point_in_region[0][0], self.last_point_in_region[0][1]
+        #draw lines between ball positions in consecutive frames
+        if len(self.ball_pos) > 1 and self.ball_detected:
+            if self.last_point_in_region:
+                x1, x2 = self.ball_pos[-1][0][0], self.ball_pos[-1][0][1]
+                y1, y2 = self.last_point_in_region[0][0], self.last_point_in_region[0][1]
 
-        #         pts = np.array([[x1, x2], [y1, y2]], np.int32)
+                pts = np.array([[x1, x2], [y1, y2]], np.int32)
         
-        #         pts = pts.reshape((-1, 1, 2))
+                pts = pts.reshape((-1, 1, 2))
 
-        #         cv2.polylines(self.frame, [pts], True, (0, 0, 255), 2)
+                cv2.polylines(self.frame, [pts], True, (0, 0, 255), 2)
 
         self.display_score()
 
