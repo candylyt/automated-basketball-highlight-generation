@@ -56,8 +56,10 @@ class ShotDetector:
 
         # for debug
         self.video_name = video_path.split("/")[-1].replace(".mp4", "")
-        self.output_frames_dir = f"shot_frames_{self.video_name}"
-        os.makedirs(self.output_frames_dir, exist_ok=True)
+        self.output_true_shot = f"true_shot_frames_{self.video_name}"
+        self.output_all_shot = f"all_shot_frames_{self.video_name}"
+        os.makedirs(self.output_true_shot, exist_ok=True)
+        os.makedirs(self.output_all_shot, exist_ok=True)
         
         self.cap = cv2.VideoCapture(video_path)
         self.frame_rate = self.cap.get(cv2.CAP_PROP_FPS)
@@ -159,7 +161,7 @@ class ShotDetector:
                 #TODO: better way to get max conf boxes only
                 boxes = sorted([(box.xyxy[0], box.conf, box.cls) for box in r.boxes], key=lambda x: -x[1])
                 #sort and get only top prediction for ball / hoop
-
+                has_shoot = False
                 # Reset detection variables
                 self.ball_detected, self.rim_detected = False, False
 
@@ -192,6 +194,7 @@ class ShotDetector:
 
                     # Class Name
                     cls = int(box[2])
+                    # print(f"cls: {cls}")
                     current_class = self.class_names[cls]
 
                     center = (int(x1 + w / 2), int(y1 + h / 2))
@@ -216,16 +219,23 @@ class ShotDetector:
                             self.ball_pos.append((center, self.frame_count, w, h, conf))
                         elif current_class == 'shoot' and not frame_boxes['shoot']:
                             frame_boxes['shoot'] = box_info
+                            has_shoot = True
+                            
                         elif current_class == 'person':
                             frame_boxes['person'].append(box_info)
-
+                    if has_shoot:
+                        # Save annotated frame as image if shoot detected
+                        annotated_frame = r.plot()
+                        frame_filename = os.path.join(self.output_all_shot, f"all_shot_{self.frame_count}_{get_time_string(self.timestamp)}.jpg")
+                        
+                        cv2.imwrite(frame_filename, annotated_frame)
             self.clean_motion()
             self.score_detection()
             
             # Store frame boxes info instead of frame
             if len(self.frame_track) >= self.num_frames_to_track:
                 self.frame_track.pop(0)
-            self.frame_track.append((frame_boxes,self.frame_count, self.timestamp, det_frame))
+            self.frame_track.append((frame_boxes,self.frame_count, self.timestamp, self.frame))
 
             # Check if shooting moment was captured
             if self.should_detect_shot:
@@ -422,9 +432,10 @@ class ShotDetector:
         shooter_positions = []
         debug_timestamp = None
         debug_frame = None
+        debug_frame_count = None
         # Step 1: Find frames with "shoot" class
         for frame_data in self.frame_track:
-            frame_boxes, frame_count, timestamp, det_frame = frame_data
+            frame_boxes, frame_count, timestamp, frame_img = frame_data
             
             if frame_boxes['shoot']:
                 shoot_box = frame_boxes['shoot']  # Only one shoot box                
@@ -466,7 +477,7 @@ class ShotDetector:
                     
                     # Calculate shoot box area
                     shoot_box_area = (x2_shoot - x1_shoot) * (y2_shoot - y1_shoot)
-                    if closest_person and max_overlap >= 0.8 * shoot_box_area:
+                    if closest_person and max_overlap >= 0.7 * shoot_box_area:
                         # shooting_moments.append((timestamp, timestamp))
                         # record the person's bottom-center position in the frame
                         x1, y1, x2, y2 = closest_person['coords']
@@ -474,8 +485,9 @@ class ShotDetector:
                         bottom_center_y = y2  # Bottom y coordinate
                         shooter_positions.append((bottom_center_x, bottom_center_y))
                         if not debug_timestamp:
-                            debug_timestamp = timestamp
-                            debug_frame = det_frame
+                            debug_timestamp = get_time_string(timestamp)
+                            debug_frame = frame_img
+                            debug_frame_count = frame_count
 
         # Step 3: Use IQR to filter outliers
         # By collecting all the possible shooting positions, we calculate the average position of "the shooter"
@@ -518,7 +530,7 @@ class ShotDetector:
                 cv2.circle(debug_frame, (plot_x, plot_y), 5, (0,0,255), -1)
                 
                 # Save the annotated frame
-                output_path = os.path.join(self.output_frames_dir, f"shot_{debug_timestamp}.jpg")
+                output_path = os.path.join(self.output_true_shot, f"true_shot_{debug_frame_count}_{debug_timestamp}.jpg")
                 cv2.imwrite(output_path, debug_frame)
             return shot_location, debug_timestamp
 
