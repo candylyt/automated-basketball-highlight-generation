@@ -19,7 +19,7 @@ function VideoDisplayPage({
   setIsProcessing,
 }) {
   const location = useLocation();
-  const { file } = location.state || {};
+  const { file1 } = location.state || {};
 
   // Team A Data
   const [scoringTimestampsA, setScoringTimestampsA] = useState([]);
@@ -150,11 +150,11 @@ function VideoDisplayPage({
   return (
     <div className="VD-background">
       <Header />
-      {file ? (
+      {file1 ? (
         <div className="VD-container">
           <div className="VD-videoContainer">
             <video controls>
-              <source src={URL.createObjectURL(file)} type={file.type} />
+              <source src={URL.createObjectURL(file1)} type={file1.type} />
             </video>
             <div className="VD-timestamps">
               <div
@@ -268,7 +268,7 @@ function VideoDisplayPage({
               shootingTimestampsA,
               shootingTimestampsB,
             }}
-            video={file}
+            video={file1}
           />
           <Modal
             isOpen={isModalOpen}

@@ -5,12 +5,13 @@ import "./HomePage.css";
 
 function Home({ videoData, setVideoData, setIsUploading, setIsProcessing }) {
   const navigate = useNavigate();
-  const [file, setFile] = useState(null);
+  const [file1, setFile1] = useState(null);
+  const [file2, setFile2] = useState(null);
   // const [videoData, setVideoData] = useState(null);
 
   useEffect(() => {
     if (videoData) {
-      navigate("/video", { state: { file } });
+      navigate("/video", { state: { file1 } });
     }
   }, [videoData, navigate]);
 
@@ -22,8 +23,10 @@ function Home({ videoData, setVideoData, setIsUploading, setIsProcessing }) {
         statistics with precision
       </div>
       <VideoUpload
-        file={file}
-        setFile={setFile}
+        file1={file1}
+        file2={file2}
+        setFile1={setFile1}
+        setFile2={setFile2}
         setIsUploading={setIsUploading}
         setIsProcessing={setIsProcessing}
         setVideoData={setVideoData}

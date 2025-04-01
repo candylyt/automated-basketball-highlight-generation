@@ -1,0 +1,40 @@
+.Court-header {
+  font-size: 1.5rem;
+  font-weight: 500;
+  text-decoration: underline;
+}
+
+.Court-prompt {
+  color: red;
+  display: flex;
+  flex-direction: row;
+}
+
+.Court-image {
+  height: 22vh;
+  cursor: crosshair;
+  display: flex;
+  flex-direction: row;
+  column-gap: 5%;
+  position: relative;
+}
+
+.Court-dot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  background-color: red;
+  border-radius: 50%;
+}
+
+.Court-button {
+  margin-top: 0.4rem;
+  margin-bottom: 0.5rem;
+  margin-left: 1rem;
+  background-color: red;
+}
+
+.Court-button:hover {
+  background-color: rgb(195, 99, 99);
+}

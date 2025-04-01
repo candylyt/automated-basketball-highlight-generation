@@ -1,16 +1,33 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Modal from "react-modal";
 import "./Questions.css";
-import { validateTimestamp, convertFullTimestamp } from "./utils";
+import { validateTimestamp, convertFullTimestamp, captureFrame } from "./utils";
+import LabelCourt from "./LabelCourt";
+import { FileUploader } from "react-drag-drop-files";
+import { ReactComponent as VideoUploadIcon } from "../assets/videoUploadIcon.svg";
 
 Modal.setAppElement("#root");
+const fileTypes = ["MP4"];
 
-function Questions({ isOpen, onRequestClose, onSubmit }) {
+function Questions({
+  isOpen,
+  frameUrl1,
+  frameUrl2,
+  setFrameUrl2,
+  file2,
+  setFile2,
+  onRequestClose,
+  onSubmit,
+}) {
   const [isMatch, setIsMatch] = useState(null);
   const [isSwitched, setIsSwitched] = useState(null);
   const [switchTimestamp, setSwitchTimestamp] = useState("");
   const [quarterTimestamps, setQuarterTimestamps] = useState(["00:00"]);
   const [error, setError] = useState("");
+  const [points1, setPoints1] = useState([]);
+  const [points2, setPoints2] = useState([]);
+  const [imageDimensions1, setImageDimensions1] = useState([]);
+  const [imageDimensions2, setImageDimensions2] = useState([]);
 
   const handleAddQuarter = () => {
     setQuarterTimestamps([...quarterTimestamps, ""]);
@@ -29,6 +46,22 @@ function Questions({ isOpen, onRequestClose, onSubmit }) {
     setQuarterTimestamps(newQuarterTimestamps);
   };
 
+  const updateImageDimensions = (camera, width, height) => {
+    if (camera === 1) {
+      setImageDimensions1([width, height]);
+    } else if (camera === 2) {
+      setImageDimensions2([width, height]);
+    }
+  };
+
+  const handleChange = async (video) => {
+    setFile2(video);
+    captureFrame(video, (frameBlob) => {
+      const imageUrl = URL.createObjectURL(frameBlob);
+      setFrameUrl2(imageUrl);
+    });
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -38,7 +71,6 @@ function Questions({ isOpen, onRequestClose, onSubmit }) {
     }
 
     for (const timestamp of quarterTimestamps) {
-      console.log(timestamp);
       if (timestamp != "" && !validateTimestamp(timestamp)) {
         setError(
           "Please enter valid timestamps for all quarters in hh:mm:ss or mm:ss format!"
@@ -50,7 +82,16 @@ function Questions({ isOpen, onRequestClose, onSubmit }) {
     const formattedTimestamps = quarterTimestamps.map(convertFullTimestamp);
 
     setError("");
-    onSubmit({ isMatch, isSwitched, switchTimestamp, formattedTimestamps });
+    onSubmit({
+      isMatch,
+      isSwitched,
+      switchTimestamp,
+      formattedTimestamps,
+      points1,
+      points2,
+      imageDimensions1,
+      imageDimensions2,
+    });
     onRequestClose();
   };
 
@@ -58,8 +99,14 @@ function Questions({ isOpen, onRequestClose, onSubmit }) {
     setIsMatch(null);
     setIsSwitched(null);
     setSwitchTimestamp("");
-    setQuarterTimestamps([""]);
+    setQuarterTimestamps(["00:00"]);
     setError("");
+    setPoints1([]);
+    setPoints2([]);
+    setFile2(null);
+    setFrameUrl2(null);
+    setImageDimensions1([]);
+    setImageDimensions2([]);
     onRequestClose();
   };
 
@@ -80,7 +127,6 @@ function Questions({ isOpen, onRequestClose, onSubmit }) {
               Yes
               <input
                 type="radio"
-                // value="Yes"
                 checked={isMatch === true}
                 onChange={(e) => setIsMatch(true)}
               />
@@ -89,7 +135,6 @@ function Questions({ isOpen, onRequestClose, onSubmit }) {
               No
               <input
                 type="radio"
-                // value="No"
                 checked={isMatch === false}
                 onChange={(e) => setIsMatch(false)}
               />
@@ -98,7 +143,42 @@ function Questions({ isOpen, onRequestClose, onSubmit }) {
         </div>
         {isMatch && (
           <div className="Question-formGroup">
-            <label>2. Did the teams switch side throughout the game?</label>
+            <label>
+              2. Please upload the game footage of the other half court.
+            </label>
+            {file2 ? (
+              <div className="Question-videoContainer">
+                <video controls className="Question-video">
+                  <source src={URL.createObjectURL(file2)} type={file2.type} />
+                </video>
+                <button
+                  className="Question-reupload"
+                  onClick={() => setFile2(null)}
+                >
+                  Reupload
+                </button>
+              </div>
+            ) : (
+              <FileUploader
+                classes="Question-uploadBox"
+                handleChange={handleChange}
+                name="file"
+                types={fileTypes}
+                hoverTitle=" "
+              >
+                <div>
+                  <div className="Question-uploadButton">
+                    <VideoUploadIcon className="Question-videoUploadIcon" />
+                    Upload your video
+                  </div>
+                  <div className="Question-alternative">
+                    Or drag and drop a video here
+                  </div>
+                </div>
+              </FileUploader>
+            )}
+
+            <label>3. Did the teams switch side throughout the game?</label>
             <div className="Question-radioGroup">
               <label>
                 Yes
@@ -123,7 +203,7 @@ function Questions({ isOpen, onRequestClose, onSubmit }) {
         {isSwitched && (
           <div className="Question-formGroup">
             <label>
-              3. Please indicate the timestamp when the team switched side
+              4. Please indicate the timestamp when the team switched side
               (e.g., 30:00).
             </label>
             <input
@@ -140,8 +220,8 @@ function Questions({ isOpen, onRequestClose, onSubmit }) {
               isMatch === false || !isMatch
                 ? "2."
                 : isSwitched === true
-                ? "4."
-                : "3."
+                ? "5."
+                : "4."
             } Please indicate the starting timestamp for each quarter (if any).`}
           </label>
           <div className="Question-quarters">
@@ -171,6 +251,24 @@ function Questions({ isOpen, onRequestClose, onSubmit }) {
             Add Quarter
           </button>
         </div>
+        {frameUrl1 && (
+          <LabelCourt
+            camera={1}
+            imageUrl={frameUrl1}
+            points={points1}
+            setPoints={setPoints1}
+            updateImageDimensions={updateImageDimensions}
+          />
+        )}
+        {frameUrl2 && (
+          <LabelCourt
+            camera={2}
+            imageUrl={frameUrl2}
+            points={points2}
+            setPoints={setPoints2}
+            updateImageDimensions={updateImageDimensions}
+          />
+        )}
         <div className="Question-error">{error}</div>
         <div className="Question-buttonContainer">
           <button type="button" onClick={handleCancel}>
@@ -182,7 +280,10 @@ function Questions({ isOpen, onRequestClose, onSubmit }) {
               isMatch == null ||
               (isMatch && isSwitched == null) ||
               (isSwitched && switchTimestamp === "") ||
-              quarterTimestamps.some((timestamp) => timestamp === "")
+              quarterTimestamps.some((timestamp) => timestamp === "") ||
+              points1.length !== 4 ||
+              (isMatch && file2 == null) ||
+              (isMatch && points2.length !== 4)
             }
           >
             Submit

@@ -88,7 +88,7 @@ def process_video(video_path, score_team_args):
 def upload_video():
     logger.log(INFO, 'upload_video')
 
-    file = request.files['video']
+    file = request.files['video1']
 
     logger.log(INFO, request.form)
     

@@ -10,7 +10,10 @@
   padding: 30px;
   border-radius: 8px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  max-width: 35vw;
+  max-width: 40vw;
+  max-height: 70vh;
+  overflow-y: auto;
+  scrollbar-width: none;
 }
 
 .Question-overlay {
@@ -114,4 +117,66 @@ button:hover {
   display: flex;
   flex-direction: row;
   justify-content: center;
+}
+
+.Question-uploadBox {
+  border-radius: 20px;
+  border-style: dashed;
+  margin-left: 5% !important;
+  margin-top: 3%;
+  margin-bottom: 3% !important;
+  width: 80%;
+  height: 100%;
+  border-color: rgb(187, 186, 186);
+  display: flex;
+  flex-direction: column;
+  justify-items: center;
+  align-items: center;
+  justify-content: center;
+  padding-top: 5%;
+  padding-bottom: 5%;
+}
+
+.Question-uploadButton {
+  width: 20vw;
+  height: 50%;
+  background-color: #3ad1f2;
+  border-radius: 20px;
+  font-size: 1.8rem;
+  display: flex;
+  text-align: center;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+}
+
+.Question-alternative {
+  margin-top: 20px;
+  font-size: 1.3rem;
+  font-weight: 500;
+  font-style: italic;
+  justify-self: center;
+}
+
+.Question-videoUploadIcon {
+  margin-right: 30px;
+  width: 15%;
+}
+
+.Question-video {
+  width: 70%;
+  margin-left: 5% !important;
+  margin-bottom: 3%;
+  margin-top: 2%;
+}
+
+.Question-reupload {
+  height: 10%;
+  align-self: end;
+  margin-bottom: 3%;
+}
+
+.Question-videoContainer {
+  display: flex;
+  flex-direction: row;
 }
