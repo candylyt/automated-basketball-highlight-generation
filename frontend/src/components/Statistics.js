@@ -1,11 +1,15 @@
 import React, { useState } from "react";
 import { ReactComponent as ExportIcon } from "../assets/exportIcon.svg";
+import infoIcon from "../assets/infoIcon.png";
 import "./Statistics.css";
 import Export from "./Export";
 import { sumArray } from "./utils";
 
 function Statistics({ data, videoData, timestamps, video }) {
   const [selectedTeam, setSelectedTeam] = useState("A");
+  const [showInfo, setShowInfo] = useState(false);
+
+  console.log(showInfo);
 
   const calculatePercentage = (numerator, denominator) => {
     return (numerator / denominator) * 100;
@@ -13,7 +17,23 @@ function Statistics({ data, videoData, timestamps, video }) {
 
   return (
     <div className="statistics">
-      <h2>Statistics</h2>
+      <div className="statisticsHeader">
+        <div className="statisticsTitle">Statistics</div>
+        <img
+          className="statistics-infoIcon"
+          onMouseEnter={() => setShowInfo(true)}
+          onMouseLeave={() => setShowInfo(false)}
+          src={infoIcon}
+        />
+        {showInfo && (
+          <div className="statistics-infoOverlay">
+            <div>
+              Team-based statistics are only available for full-court matches
+              with two camera angles.
+            </div>
+          </div>
+        )}
+      </div>
       <div className="division" />
       {videoData.isMatch && (
         <div className="statisticsTeams">
@@ -23,12 +43,12 @@ function Statistics({ data, videoData, timestamps, video }) {
           >
             Team A
           </div>
-          <di
+          <div
             className={selectedTeam === "B" ? "teamSelected" : "teamUnselected"}
             onClick={() => setSelectedTeam("B")}
           >
             Team B
-          </di>
+          </div>
         </div>
       )}
 

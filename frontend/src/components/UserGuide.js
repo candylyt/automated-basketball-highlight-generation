@@ -9,9 +9,13 @@ Modal.setAppElement("#root");
 const UserGuide = ({ isOpen, onRequestClose, onSubmit }) => {
   const ugcontent = [
     "Only stationary cameras are allowed. Please ensure that the camera's location is FIXED throughout the video. It should NOT be moved or rotated.",
-    "Please position the camera at a height of 2.5 meters or higher. The paint/key area should be clearly visible in the video.",
+    "Please position the camera at a height of 2.5 meters or higher. The 4 corners of the paint/key area should be clearly visible in the video.",
     "The default processing pipeline supports only half-court videos. If you have a full-court video, you will be prompted to upload two separate videos.",
     "Please ensure that the camera angle is similar to the samples below:",
+    "The video should be in MP4 format. The maximum file size is 5GB.",
+    "The video should be at least 30 seconds long and no longer than 2 hours.",
+    "The video should be in landscape mode. Portrait videos will not be accepted.",
+    "Team-based statistics are only available for full-court matches. For half-court matches, only overall statistics that include both teams will be provided.",
     "The video will be discarded after all processing is completed. We do not store any videos on our servers.",
   ];
 

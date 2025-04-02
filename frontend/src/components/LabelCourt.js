@@ -47,7 +47,7 @@ const PaintAreaLabeler = ({
     <div className="p-4 flex flex-col items-center gap-4">
       {camera === 1 && <h2 className="Court-header">Label Paint Area</h2>}
       {camera === 1 && (
-        <p>
+        <p className="Court-instructions">
           Instructions: Please click on the four corners of the paint area/key
           area in the following order: Top Left → Top Right → Bottom Left →
           Bottom Right.

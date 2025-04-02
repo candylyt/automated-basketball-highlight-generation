@@ -38,3 +38,8 @@
 .Court-button:hover {
   background-color: rgb(195, 99, 99);
 }
+
+.Court-instructions {
+  font-size: 1.2rem;
+  font-weight: 400;
+}

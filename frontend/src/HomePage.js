@@ -7,13 +7,12 @@ function Home({ videoData, setVideoData, setIsUploading, setIsProcessing }) {
   const navigate = useNavigate();
   const [file1, setFile1] = useState(null);
   const [file2, setFile2] = useState(null);
-  // const [videoData, setVideoData] = useState(null);
 
   useEffect(() => {
-    if (videoData) {
-      navigate("/video", { state: { file1 } });
+    if (videoData && file1) {
+      navigate("/video", { state: { file1, file2 } });
     }
-  }, [videoData, navigate]);
+  }, [videoData, file1, file2, navigate]);
 
   return (
     <div className="HomePage">

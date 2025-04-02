@@ -8,17 +8,62 @@
   position: relative;
 }
 
-.statistics h2 {
-  font-size: calc(15px + 2vmin);
-  font-weight: 600;
+.statisticsHeader {
+  display: flex;
+  flex-direction: row;
   margin-top: 11px;
+}
+
+.statistics-infoIcon {
+  width: 9%;
+  margin-left: 3%;
+  align-self: center;
+  height: 80%;
+}
+.statistics-infoIcon:hover {
+  cursor: pointer;
+}
+
+.statisticsTitle {
+  font-size: 2rem;
+  font-weight: 600;
   margin-left: 15px;
   margin-bottom: 1px;
   align-self: flex-start;
 }
 
+.statistics-infoOverlay {
+  position: absolute;
+  top: 5.5%;
+  left: 49.6%;
+  transform: translateX(-50%);
+  background-color: white;
+  color: black;
+  padding: 15px;
+  padding-left: 20px;
+  padding-right: 20px;
+  border: 2px solid red;
+  border-radius: 5px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 180px;
+  z-index: 10;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.statistics-infoOverlay::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent red transparent;
+}
+
 .division {
-  width: 45%;
+  width: 38%;
   height: 1px;
   background-color: black;
   border: 1px solid black;

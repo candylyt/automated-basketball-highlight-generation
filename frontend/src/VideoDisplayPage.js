@@ -19,7 +19,11 @@ function VideoDisplayPage({
   setIsProcessing,
 }) {
   const location = useLocation();
-  const { file1 } = location.state || {};
+  const { file1, file2 } = location.state || {};
+  console.log("File 1:", file1);
+  console.log("File 2:", file2);
+
+  const [selectedAngle, setSelectedAngle] = useState(1);
 
   // Team A Data
   const [scoringTimestampsA, setScoringTimestampsA] = useState([]);
@@ -153,9 +157,40 @@ function VideoDisplayPage({
       {file1 ? (
         <div className="VD-container">
           <div className="VD-videoContainer">
-            <video controls>
-              <source src={URL.createObjectURL(file1)} type={file1.type} />
-            </video>
+            {file2 && (
+              <div className="VD-cameraSelection">
+                <div
+                  className={
+                    selectedAngle === 1
+                      ? "VD-cameraAngleSelected"
+                      : "VD-cameraAngle"
+                  }
+                  onClick={() => setSelectedAngle(1)}
+                >
+                  Camera Angle 1
+                </div>
+                <div
+                  className={
+                    selectedAngle === 2
+                      ? "VD-cameraAngleSelected"
+                      : "VD-cameraAngle"
+                  }
+                  onClick={() => setSelectedAngle(2)}
+                >
+                  Camera Angle 2
+                </div>
+              </div>
+            )}
+            {selectedAngle === 1 && (
+              <video controls>
+                <source src={URL.createObjectURL(file1)} type={file1.type} />
+              </video>
+            )}
+            {selectedAngle === 2 && (
+              <video controls>
+                <source src={URL.createObjectURL(file2)} type={file2.type} />
+              </video>
+            )}
             <div className="VD-timestamps">
               <div
                 className={
