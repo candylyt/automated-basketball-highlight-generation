@@ -62,7 +62,7 @@ export const sumArray = (arr) => {
   return arr.reduce((acc, num) => acc + num, 0);
 };
 
-export const captureFrame = (videoFile, callback) => {
+export const captureFrame = (videoFile, frameNumber, callback) => {
   const video = document.createElement("video");
   video.src = URL.createObjectURL(videoFile);
   video.crossOrigin = "anonymous";
@@ -70,7 +70,7 @@ export const captureFrame = (videoFile, callback) => {
 
   video.onloadedmetadata = () => {
     const estimatedFps = 30; // You can refine this logic
-    const targetTime = 100 / estimatedFps;
+    const targetTime = frameNumber / estimatedFps;
     video.currentTime = targetTime;
   };
 

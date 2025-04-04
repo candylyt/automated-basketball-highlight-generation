@@ -43,3 +43,17 @@
   font-size: 1.2rem;
   font-weight: 400;
 }
+
+.Court-frameSelection {
+  display: flex;
+  flex-direction: row;
+  column-gap: 22%;
+}
+
+.Court-frameButton {
+  cursor: pointer;
+}
+
+.Court-frameButton:hover {
+  text-decoration: underline;
+}

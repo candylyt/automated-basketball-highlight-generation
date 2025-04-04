@@ -3,16 +3,20 @@ import court_topRight from "../assets/court-topRight.png";
 import court_topLeft from "../assets/court-topLeft.png";
 import court_bottomRight from "../assets/court-bottomRight.png";
 import court_bottomLeft from "../assets/court-bottomLeft.png";
+import { captureFrame } from "./utils";
 import "./LabelCourt.css";
 
 const PaintAreaLabeler = ({
+  video,
   camera,
   imageUrl,
   points,
   setPoints,
+  setFrameUrl,
   updateImageDimensions,
 }) => {
   const [currentStep, setCurrentStep] = useState(0);
+  const [currentFrame, setCurrentFrame] = useState(100);
 
   const prompts = [
     "Click to label the *Top Left* corner.",
@@ -21,6 +25,29 @@ const PaintAreaLabeler = ({
     "Click to label the *Bottom Right* corner.",
   ];
 
+  const totalFrames = Math.floor(video.duration * 30);
+
+  const handleChangeFrame = (direction) => {
+    if (direction === "prev") {
+      if (currentFrame - 1 < 0) {
+        return;
+      }
+      captureFrame(video, currentFrame - 1, (frameBlob) => {
+        const imageUrl = URL.createObjectURL(frameBlob);
+        setCurrentFrame(currentFrame - 1);
+        setFrameUrl(imageUrl);
+      });
+    } else {
+      if (currentFrame + 1 <= totalFrames) {
+        return;
+      }
+      captureFrame(video, currentFrame + 1, (frameBlob) => {
+        const imageUrl = URL.createObjectURL(frameBlob);
+        setCurrentFrame(currentFrame + 1);
+        setFrameUrl(imageUrl);
+      });
+    }
+  };
   const handleImageClick = (e) => {
     if (currentStep >= 4) return;
 
@@ -81,6 +108,20 @@ const PaintAreaLabeler = ({
         {currentStep == 1 && <img src={court_topRight} />}
         {currentStep == 2 && <img src={court_bottomLeft} />}
         {currentStep == 3 && <img src={court_bottomRight} />}
+      </div>
+      <div className="Court-frameSelection">
+        <div
+          className="Court-frameButton"
+          onClick={() => handleChangeFrame("prev")}
+        >
+          Previous Frame
+        </div>
+        <div
+          className="Court-frameButton"
+          onClick={() => handleChangeFrame("next")}
+        >
+          Next Frame
+        </div>
       </div>
     </div>
   );
