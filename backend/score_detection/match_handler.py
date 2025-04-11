@@ -6,7 +6,14 @@ from score_counter import (
     MatchScoreCounter, 
     ScoreCounter
 )
-from shot_localizer import ShotLocalizer
+from statistics import (
+    TeamStatistics
+)
+
+from localization import (
+    ShotLocalizer
+)
+
 from utils import get_time_string
 import os
 import uuid
@@ -27,7 +34,8 @@ class MatchHandler:
                  quarter_timestamps, is_match=False, is_switched=False, switch_time='99:99:99',
                  points1=None, points2=None, 
                  image_dimensions1=None, image_dimensions2=None,
-                 on_detection_callback=None, on_complete_callback=None):
+                 on_detection_callback=None, on_complete_callback=None,
+                 run_id=None):
         """
         Initialize the match handler with two videos
         
@@ -52,7 +60,7 @@ class MatchHandler:
         self.is_switched = is_switched
         self.switch_time = switch_time
         self.is_match = is_match
-        self.run_id = uuid.uuid4()  # Unique ID for this run, can be used for logging or tracking
+        self.run_id = run_id  # Unique ID for this run, can be used for logging or tracking
         
         # Initialize score counter
         self.score_counter = None
@@ -64,11 +72,16 @@ class MatchHandler:
         # Initialize shot localizers if points are provided
         self.localizer1 = None
         self.localizer2 = None
+
         if points1 and image_dimensions1:
             self.localizer1 = ShotLocalizer(points1, image_dimensions1)
         if is_match and points2 and image_dimensions2:
             self.localizer2 = ShotLocalizer(points2, image_dimensions2)
             
+        # Initialize statistics objects
+        self.stats_team_A = TeamStatistics(self.quarter_timestamps)
+        self.stats_team_B = TeamStatistics(self.quarter_timestamps) if self.is_match else None
+
         # Store callbacks from app.py
         self.on_detection_callback = on_detection_callback
         self.on_complete_callback = on_complete_callback
@@ -87,7 +100,7 @@ class MatchHandler:
     def on_shot_detection(self, timestamp, success, video_id, shot_location=None):
         """Callback for shot detection from either detector"""
         mapped_location = (None, None)
-        logger.log(INFO, f"Handler callback: timestamp={timestamp}, success={success}, video_id={video_id}, shot_location={shot_location}")
+        # logger.log(INFO, f"Handler callback: timestamp={timestamp}, success={success}, video_id={video_id}, shot_location={shot_location}")
         # Map shot location if available
         if shot_location:
             if video_id == 1 and self.localizer1:
@@ -95,29 +108,31 @@ class MatchHandler:
             elif video_id == 2 and self.localizer2:
                 mapped_location = self.localizer2.map_to_court(shot_location)
         
-        logger.log(INFO, f"Mapped location: {mapped_location}")
+        # logger.log(INFO, f"Mapped location: {mapped_location}")
 
         
-        # Update score counter
+        # Update stats
 
         timestring = get_time_string(timestamp)
         with self.lock:
-            if success:
-                team_id = self.score_counter.make(timestring, video_id)
-            else:
-                team_id = self.score_counter.attempt(timestring, video_id)
+            team_id = self._get_team_from_video_id(video_id, timestring)
+            if team_id == 'A':
+                self.stats_team_A.add_shot(timestring, success, mapped_location[0], mapped_location[1])
+            elif self.is_match and team_id == 'B':
+                self.stats_team_B.add_shot(timestring, success, mapped_location[0], mapped_location[1])
+            
 
         # Forward to main callback
         start_time = get_time_string(timestamp-3000)
         end_time = get_time_string(timestamp+2000)
 
-        if video_id == 1:
+        if team_id == 'A':
             self.shot_data_team_A.append((timestring, success, team_id, mapped_location[0], mapped_location[1]))
-        elif video_id == 2:
+        elif team_id == 'B':
             self.shot_data_team_B.append((timestring, success, team_id, mapped_location[0], mapped_location[1]))
 
         if self.on_detection_callback:
-            self.on_detection_callback(start_time, end_time, success, team_id)
+            self.on_detection_callback(self.run_id, start_time, end_time, success, team_id, video_id)
     
     def on_team_complete(self, video_id):
         """Callback when either detector completes"""
@@ -132,13 +147,15 @@ class MatchHandler:
 
             #TODO: implement and call statistic class here
             if self.video_1_complete and self.video_2_complete:
-                results = self.score_counter.report()
-                for k,v in results.items():
-                    logger.log(INFO, f"{k.ljust(16)} : {v}")
+                results = {}
                 
                 # Write shot data
                 os.makedirs(f'data/{self.run_id}', exist_ok=True)
                 if self.is_match:
+
+                    results['team_A'] = self.stats_team_A.get_statistics()
+                    results['team_B'] = self.stats_team_B.get_statistics()
+
                     if self.shot_data_team_A:
                         data_A_path = f'data/{self.run_id}/team_A_shot_data.txt'
                         with open(data_A_path, 'w') as f:
@@ -152,6 +169,8 @@ class MatchHandler:
                                 f.write(','.join(map(str, line))+'\n')
                 
                 else:
+
+                    results = self.stats_team_A.get_statistics()
                     if self.shot_data_team_A:
                         data_A_path = f'data/{self.run_id}/shot_data.txt'
                         with open(data_A_path, 'w') as f:
@@ -161,9 +180,20 @@ class MatchHandler:
                 
                 
                 if self.on_complete_callback:
-                    self.on_complete_callback(results, True)
+                    self.on_complete_callback(self.run_id, results, self.is_match)
 
-                
+    def _get_team_from_video_id(self, video_id, timestring):
+        """Get team ID from video ID and timestring"""
+        if not self.is_match:
+            return 'A'
+        
+        if self.is_switched:
+            if video_id == 1:
+                return 'B' if timestring > self.switch_time else "A"
+            else:
+                return "A" if timestring > self.switch_time else 'B'
+        
+        return 'A' if video_id == 1 else 'B'
     
     def start_processing(self):
         """Start processing both videos in separate threads"""

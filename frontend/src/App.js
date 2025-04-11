@@ -7,6 +7,7 @@ function App() {
   const [isUploading, setIsUploading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [videoData, setVideoData] = useState(null);
+  const [runId, setRunId] = useState(null);
 
   return (
     <Router>
@@ -20,6 +21,7 @@ function App() {
               setVideoData={setVideoData}
               setIsUploading={setIsUploading}
               setIsProcessing={setIsProcessing}
+              setRunId={setRunId}
             />
           }
         />
@@ -27,6 +29,7 @@ function App() {
           path="/video"
           element={
             <VideoDisplayPage
+              runId={runId}
               videoData={videoData}
               isUploading={isUploading}
               isProcessing={isProcessing}

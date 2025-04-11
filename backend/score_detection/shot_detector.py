@@ -404,11 +404,17 @@ class ShotDetector:
                         # on_detect(timestamp, success, video_id, shot_location)
 
                         shot_location, shot_timestamp = self.shot_detection()
+                        
+                        if shot_location:
+                            scaled_shot_location = (shot_location[0] / self.width, shot_location[1] / self.height)
+                        else:
+                            scaled_shot_location = (None, None)
+                        
                         if shot_timestamp:
                             #TODO: logic for shot localization
                             logger.log(INFO, f"Shot detected at {shot_timestamp}  |  Location: {shot_location}")
 
-                        self.on_detect(self.timestamp, True, self.video_id, shot_location)
+                        self.on_detect(self.timestamp, True, self.video_id, scaled_shot_location)
                         # move shoot detection here
                         # self.should_detect_shot = True
 
@@ -438,11 +444,16 @@ class ShotDetector:
                         #TODO: update callbacks based on specs of match handler
                         # on_detect(timestamp, success, video_id, shot_location)
                         shot_location, shot_timestamp = self.shot_detection()
+                        if shot_location:
+                            scaled_shot_location = (shot_location[0] / self.width, shot_location[1] / self.height)
+                        else:
+                            scaled_shot_location = (None, None)
+                        
                         if shot_timestamp:
                             #TODO: logic for shot localization
                             logger.log(INFO, f"Shot detected at {shot_timestamp}  |  Location: {shot_location}")
 
-                        self.on_detect(self.timestamp, False, self.video_id, shot_location)
+                        self.on_detect(self.timestamp, False, self.video_id, scaled_shot_location)
                         # move shoot detection here
                         # self.should_detect_shot = True
                         # logger.log(INFO, f"[{time_string}] {'Attempt made'.ljust(13)} | Side {side} | Team {team}")

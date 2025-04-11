@@ -80,12 +80,13 @@ function Questions({
     }
 
     const formattedTimestamps = quarterTimestamps.map(convertFullTimestamp);
+    const formattedSwitchTimestamps = convertFullTimestamp(switchTimestamp);
 
     setError("");
     onSubmit({
       isMatch,
       isSwitched,
-      switchTimestamp,
+      formattedSwitchTimestamps,
       formattedTimestamps,
       points1,
       points2,

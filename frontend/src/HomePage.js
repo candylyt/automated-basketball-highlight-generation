@@ -3,7 +3,13 @@ import { useNavigate } from "react-router-dom";
 import VideoUpload from "./components/VideoUpload";
 import "./HomePage.css";
 
-function Home({ videoData, setVideoData, setIsUploading, setIsProcessing }) {
+function Home({
+  videoData,
+  setVideoData,
+  setIsUploading,
+  setIsProcessing,
+  setRunId,
+}) {
   const navigate = useNavigate();
   const [file1, setFile1] = useState(null);
   const [file2, setFile2] = useState(null);
@@ -29,6 +35,7 @@ function Home({ videoData, setVideoData, setIsUploading, setIsProcessing }) {
         setIsUploading={setIsUploading}
         setIsProcessing={setIsProcessing}
         setVideoData={setVideoData}
+        setRunId={setRunId}
       />
     </div>
   );

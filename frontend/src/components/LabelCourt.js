@@ -15,10 +15,10 @@ const PaintAreaLabeler = ({
   const [currentStep, setCurrentStep] = useState(0);
 
   const prompts = [
-    "Click to label the *Top Left* corner.",
-    "Click to label the *Top Right* corner.",
     "Click to label the *Bottom Left* corner.",
     "Click to label the *Bottom Right* corner.",
+    "Click to label the *Top Left* corner.",
+    "Click to label the *Top Right* corner.",
   ];
 
   const handleImageClick = (e) => {
@@ -49,8 +49,8 @@ const PaintAreaLabeler = ({
       {camera === 1 && (
         <p className="Court-instructions">
           Instructions: Please click on the four corners of the paint area/key
-          area in the following order: Top Left → Top Right → Bottom Left →
-          Bottom Right.
+          area in the following order: Bottom Left → Bottom Right → Top Left →
+          Top Right.
         </p>
       )}
       <div
@@ -77,10 +77,14 @@ const PaintAreaLabeler = ({
             }}
           />
         ))}
-        {currentStep == 0 && <img src={court_topLeft} />}
-        {currentStep == 1 && <img src={court_topRight} />}
-        {currentStep == 2 && <img src={court_bottomLeft} />}
-        {currentStep == 3 && <img src={court_bottomRight} />}
+        {currentStep == 0 && (
+          <img src={`${court_bottomLeft}?v=${Date.now()}`} />
+        )}
+        {currentStep == 1 && (
+          <img src={`${court_bottomRight}?v=${Date.now()}`} />
+        )}
+        {currentStep == 2 && <img src={`${court_topLeft}?v=${Date.now()}`} />}
+        {currentStep == 3 && <img src={`${court_topRight}?v=${Date.now()}`} />}
       </div>
     </div>
   );

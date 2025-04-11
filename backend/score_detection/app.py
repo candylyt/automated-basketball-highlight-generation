@@ -8,6 +8,7 @@ import yaml
 import os
 import time
 from match_handler import MatchHandler
+import uuid
 
 from logger import (
     INFO,
@@ -33,49 +34,80 @@ CORS(app)
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 # Callback functions for MatchHandler
-def on_detection(start_time, end_time, success, team=None):
+def on_detection(run_id, start_time, end_time, success, team=None, video_id=1):
     '''
     {
         'start_time' :  str,   => time in 'hh:mm:ss' format
         'end_time' :    str,  
         'success' :     bool,
         'team' :        char[Optional],  => either 'A', 'B' if is_match is true or otherwise None
+        'video_id' :    int,   => 1 or 2
     }
     
     '''
 
     data = {
+        'run_id' : run_id,
         'start_time' : start_time,
         'end_time' : end_time,
         'success': success,
         'team' : team,
+        'video_id' : video_id
         # 'location' : mapped_location
     }
 
     logger.log(SOCKET, f'[shooting_detected]    {data}')
     socketio.emit('shooting_detected', data)
 
-def on_complete(report, is_match):
+def on_complete(run_id, report, is_match):
     '''
-    If is_match is false, the format of the response is
+    if is_match:
     
     {
+        'run_id' :      uuid
         'is_match' :    bool,
-        'makes' :       List[int],  => contains the count for each quarter
-        'attempts' :    List[int],
+        
+        'team_A': {
+            'zone_makes':                       List[int],
+            'zone_attempts':                    List[int],
+            'zone_shooting_percentage':         List[float],
+            'three_pt_makes':                   int,
+            'three_pt_attempts':                int,
+            'three_pt_shooting_percentage':     float,
+            'two_pt_makes':                     int,
+            'two_pt_attempts':                  int,
+            'two_pt_shooting_percentage':       float,
+            'paint_area_makes':                 int,
+            'paint_area_attempts':              int,
+            'paint_area_shooting_percentage':   float,
+            'makes' :                           List[int],    # These 3 are by quarters
+            'attempts' :                        List[int],
+            'shooting_percentage' :             List[float],
+            'total_makes' :                     int,
+            'total_attempts' :                  int,
+            'total_shooting_percentage' :       float
+        },
+
+        'team_B': {
+            ...      # Similar
+        }
+        
     }
 
-    Otherwise if is_match is true,
+    Otherwise:
 
     {
+        'run_id'   :        uuid,
         'is_match' :        bool,
-        'team_A_attempts':  List[int],
-        'team_A_makes':     List[int],
-        'team_B_attempts':  List[int],
-        'team_B_makes':     List[int],
+        'zone_makes':       List[int],
+        'zone_attempts':    List[int]
+        ...                 # similar to above
     }
     '''
+    logger.log(INFO, f'from handler: {report}, {is_match}')
+
     data = {
+        'run_id' : run_id,
         'is_match' : is_match,
         **report
     }
@@ -87,6 +119,8 @@ def on_complete(report, is_match):
 
 @app.route('/upload' , methods=['POST'])
 def upload_video():
+    run_id = str(uuid.uuid4())
+    
     logger.log(INFO, 'upload_video')
 
     video1 = request.files.get('video1')
@@ -97,6 +131,8 @@ def upload_video():
 
     image_dimensions1 = request.form.get('imageDimensions1')
     image_dimensions2 = request.form.get('imageDimensions2')
+
+    
 
     logger.log(INFO, request.form)
     
@@ -112,11 +148,11 @@ def upload_video():
     video1_path = video2_path = None
 
     if video1:
-        video1_path = os.path.join(app.config['UPLOAD_FOLDER'], video1.filename)
+        video1_path = os.path.join(app.config['UPLOAD_FOLDER'], f'{run_id}_{video1.filename}')
         video1.save(video1_path)
     
     if video2:
-        video2_path = os.path.join(app.config['UPLOAD_FOLDER'], video2.filename)
+        video2_path = os.path.join(app.config['UPLOAD_FOLDER'], f'{run_id}_{video2.filename}')
         video2.save(video2_path)
 
      # Create MatchHandler
@@ -132,14 +168,18 @@ def upload_video():
         image_dimensions1=image_dimensions1,
         image_dimensions2=image_dimensions2,
         on_detection_callback=on_detection,
-        on_complete_callback=on_complete
+        on_complete_callback=on_complete,
+        run_id=run_id
     )
 
     thread = threading.Thread(target=handler.start_processing)
     thread.daemon = True
     thread.start()
 
-    return jsonify({'message' : 'Processing started successfully'})
+    return jsonify({
+        'run_id' : run_id,
+        'message' : 'Processing started successfully'
+    })
     
 @app.route('/generate-report', methods=['POST'])
 def generate_report():
@@ -150,6 +190,7 @@ def generate_report():
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], "basketball_game_report.pdf")
 
         # Extract required data from the frontend request
+        run_id = data.get("run_id")
         game_summary = data.get("game_summary", {})
         field_goals_stats = data.get("field_goals_stats", {})
         shot_types_stats = data.get("shot_types_stats", {})

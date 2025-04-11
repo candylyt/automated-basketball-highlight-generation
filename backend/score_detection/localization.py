@@ -3,6 +3,26 @@
 import numpy as np
 import cv2
 
+from constants import (
+    MAP_WIDTH,
+    MAP_HEIGHT,
+    PENALTY_BOX_X1,
+    PENALTY_BOX_X2,
+    PENALTY_BOX_Y1,
+    PENALTY_BOX_Y2,
+)
+
+from logger import (
+    INFO,
+    SOCKET,
+    Logger
+)
+
+logger = Logger([
+    INFO
+])
+
+
 class ShotLocalizer:
     def __init__(self, penalty_box_points, image_dimensions):
         """
@@ -18,11 +38,12 @@ class ShotLocalizer:
         # Standard court dimensions (in some unit, e.g. feet)
         # These represent the same four corners on a standardized court diagram
         # TODO: hard-coded penalty box coords, maybe single template or mapped template
+        # Top left, top right, bottom right, bottom left
         self.court_penalty_box = np.array([
-            [252, 24],    # top-left
-            [485, 24],    # top-right
-            [252, 300],    # bottom-right
-            [485, 300]     # bottom-left
+            [PENALTY_BOX_X1, PENALTY_BOX_Y1],  # top-left
+            [PENALTY_BOX_X2, PENALTY_BOX_Y1],  # top-right
+            [PENALTY_BOX_X1, PENALTY_BOX_Y2],   # bottom-left
+            [PENALTY_BOX_X2, PENALTY_BOX_Y2],  # bottom-right
         ], dtype=float)
         
         # Calculate the homography matrix when initialized
@@ -72,8 +93,14 @@ class ShotLocalizer:
         Returns:
             (x, y) coordinates on the standardized court
         """
+        if not point[0] or not point[1]:
+            return (None, None)
+        
+        logger.log(INFO, f"Mapping point: {point}")
+
         # Convert point to proper format
-        point = np.array([[point[0], point[1]]], dtype=float)
+        point = np.array([[point[0]*self.image_width, point[1]*self.image_height]], dtype=float)
+        
         
         # Apply perspective transformation
         transformed_point = cv2.perspectiveTransform(point.reshape(-1, 1, 2), self.homography_matrix)
