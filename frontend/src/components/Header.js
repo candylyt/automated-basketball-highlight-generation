@@ -2,7 +2,7 @@ import React from "react";
 import "./Header.css";
 
 const handleReturnHome = () => {
-  window.location.href = "/";
+  window.location.href = "/?refresh=true"; // Navigate to home and force reload
 };
 
 function Header() {
