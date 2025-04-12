@@ -43,8 +43,6 @@ logger = Logger([
     INFO
 ])
 
-
-
 class ShotDetector:
     def __init__(self, 
                 video_path,             # Video path for processing
@@ -255,20 +253,17 @@ class ShotDetector:
                         frame_filename = os.path.join(self.output_all_shot, f"all_shot_{self.frame_count}_{get_time_string(self.timestamp)}.jpg")
                         
                         cv2.imwrite(frame_filename, annotated_frame)
-            self.clean_motion()
-            self.score_detection()
             
             # Store frame boxes info instead of frame
+            # TODO: do not need to add frame_boxes
             if len(self.frame_track) >= self.num_frames_to_track:
                 self.frame_track.pop(0)
             self.frame_track.append((frame_boxes,self.frame_count, self.timestamp, self.frame))
 
-            # Check if shooting moment was captured
-            if self.should_detect_shot:
-                # Create a deep copy of frame_track to pass to detection thread
-                frame_track_snapshot = deepcopy(self.frame_track)
-                self.detection_queue.put(frame_track_snapshot)
-                self.should_detect_shot = False
+            self.clean_motion()
+            self.score_detection()
+
+            
 
             self.frame_count += 1
 
@@ -411,24 +406,29 @@ class ShotDetector:
                     # self.frame = cv2.putText(self.frame, 'DOWN', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
                     if scored:
                         # print(self.ball_pos[-1], self.last_point_in_region, self.hoop_pos[-1])
-                        time_string = get_time_string(self.timestamp)
+                        # time_string = get_time_string(self.timestamp)
                         self.makes += 1
                         self.attempts += 1
                         
-                        # on_detect(timestamp, success, video_id, shot_location)
-
-                        shot_location, shot_timestamp = self.shot_detection()
+                        # Create detection task dictionary with current state
+                        detection_task = {
+                            'frame_track': deepcopy(self.frame_track),
+                            'timestamp': self.timestamp,
+                            'is_scored': True,
+                            'video_id': self.video_id
+                        }
+                        self.detection_queue.put(detection_task)
                         
-                        if shot_location:
-                            scaled_shot_location = (shot_location[0] / self.width, shot_location[1] / self.height)
-                        else:
-                            scaled_shot_location = (None, None)
+                        # shot_location, shot_timestamp = self.shot_detection()
                         
-                        if shot_timestamp:
-                            #TODO: logic for shot localization
-                            logger.log(INFO, f"Shot detected at {shot_timestamp}  |  Location: {shot_location}")
-
-                        self.on_detect(self.timestamp, True, self.video_id, scaled_shot_location)
+                        # if shot_location:
+                        #     scaled_shot_location = (shot_location[0] / self.width, shot_location[1] / self.height)
+                        # else:
+                        #     scaled_shot_location = (None, None)
+                        
+                        # if shot_timestamp:
+                        #     logger.log(INFO, f"Shot detected at {shot_timestamp}  |  Location: {shot_location}")
+                        # self.on_detect(self.timestamp, True, self.video_id, scaled_shot_location)
                         # move shoot detection here
                         # self.should_detect_shot = True
 
@@ -454,20 +454,27 @@ class ShotDetector:
                         self.overlay_color = (0, 0, 255)
                         self.fade_counter = self.fade_frames
 
+                        # Create detection task dictionary with current state
+                        detection_task = {
+                            'frame_track': deepcopy(self.frame_track),
+                            'timestamp': self.timestamp,
+                            'is_scored': False,
+                            'video_id': self.video_id
+                        }
+                        self.detection_queue.put(detection_task)
 
-                        #TODO: update callbacks based on specs of match handler
                         # on_detect(timestamp, success, video_id, shot_location)
-                        shot_location, shot_timestamp = self.shot_detection()
-                        if shot_location:
-                            scaled_shot_location = (shot_location[0] / self.width, shot_location[1] / self.height)
-                        else:
-                            scaled_shot_location = (None, None)
+                        # shot_location, shot_timestamp = self.shot_detection()
+                        # if shot_location:
+                        #     scaled_shot_location = (shot_location[0] / self.width, shot_location[1] / self.height)
+                        # else:
+                        #     scaled_shot_location = (None, None)
                         
-                        if shot_timestamp:
-                            #TODO: logic for shot localization
-                            logger.log(INFO, f"Shot detected at {shot_timestamp}  |  Location: {shot_location}")
+                        # if shot_timestamp:
+                        #     #TODO: logic for shot localization
+                        #     logger.log(INFO, f"Shot detected at {shot_timestamp}  |  Location: {shot_location}")
 
-                        self.on_detect(self.timestamp, False, self.video_id, scaled_shot_location)
+                        # self.on_detect(self.timestamp, False, self.video_id, scaled_shot_location)
                         # move shoot detection here
                         # self.should_detect_shot = True
                         # logger.log(INFO, f"[{time_string}] {'Attempt made'.ljust(13)} | Side {side} | Team {team}")
@@ -617,17 +624,27 @@ class ShotDetector:
         """Background thread that processes shot detection tasks."""
         while self.detection_thread_active:
             try:
-                # Get frame_track snapshot from queue
-                frame_track_snapshot = self.detection_queue.get(timeout=1.0)
+                # Get detection task dictionary from queue
+                task = self.detection_queue.get(timeout=1.0)
                 
                 # Process the detection
-                shot_location, shot_timestamp = self._process_shot_detection(frame_track_snapshot)
+                shot_location, shot_timestamp = self._process_shot_detection(task['frame_track'])
                 
-                # Log results if detection was successful
-                if shot_timestamp or shot_location:
-                    logger.log(INFO, f"Shot detected at {shot_timestamp}")
-                    logger.log(INFO, f"Shot location: {shot_location}")
+                # Scale shot location if found
+                if shot_location:
+                    scaled_shot_location = (shot_location[0] / self.width, shot_location[1] / self.height)
+                else:
+                    scaled_shot_location = (None, None)
                 
+                # Log detection results using preserved state
+                logger.log(INFO, f"Score detected at {get_time_string(task['timestamp'])} | "
+                            f"Location: {scaled_shot_location} | "
+                            f"Video: {task['video_id']} | "
+                            f"{'Made' if task['is_scored'] else 'Missed'}")
+
+                # Call on_detect with preserved state
+                self.on_detect(task['timestamp'], task['is_scored'], task['video_id'], scaled_shot_location)
+
             except Empty:
                 # Queue timeout - continue waiting
                 continue
