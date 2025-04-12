@@ -61,3 +61,28 @@ export const convertFullTimestamp = (timestamp) => {
 export const sumArray = (arr) => {
   return arr.reduce((acc, num) => acc + num, 0);
 };
+
+export const captureFrame = (videoFile, callback) => {
+  const video = document.createElement("video");
+  video.src = URL.createObjectURL(videoFile);
+  video.crossOrigin = "anonymous";
+  video.preload = "metadata";
+
+  video.onloadedmetadata = () => {
+    const estimatedFps = 30; // You can refine this logic
+    const targetTime = 100 / estimatedFps;
+    video.currentTime = targetTime;
+  };
+
+  video.onseeked = () => {
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    canvas.toBlob((blob) => {
+      callback(blob);
+    }, "image/jpeg");
+  };
+};

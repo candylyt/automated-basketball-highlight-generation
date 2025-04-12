@@ -3,16 +3,22 @@ import { useNavigate } from "react-router-dom";
 import VideoUpload from "./components/VideoUpload";
 import "./HomePage.css";
 
-function Home({ videoData, setVideoData, setIsUploading, setIsProcessing }) {
+function Home({
+  videoData,
+  setVideoData,
+  setIsUploading,
+  setIsProcessing,
+  setRunId,
+}) {
   const navigate = useNavigate();
-  const [file, setFile] = useState(null);
-  // const [videoData, setVideoData] = useState(null);
+  const [file1, setFile1] = useState(null);
+  const [file2, setFile2] = useState(null);
 
   useEffect(() => {
-    if (videoData) {
-      navigate("/video", { state: { file } });
+    if (videoData && file1) {
+      navigate("/video", { state: { file1, file2 } });
     }
-  }, [videoData, navigate]);
+  }, [videoData, file1, file2, navigate]);
 
   return (
     <div className="HomePage">
@@ -22,11 +28,14 @@ function Home({ videoData, setVideoData, setIsUploading, setIsProcessing }) {
         statistics with precision
       </div>
       <VideoUpload
-        file={file}
-        setFile={setFile}
+        file1={file1}
+        file2={file2}
+        setFile1={setFile1}
+        setFile2={setFile2}
         setIsUploading={setIsUploading}
         setIsProcessing={setIsProcessing}
         setVideoData={setVideoData}
+        setRunId={setRunId}
       />
     </div>
   );

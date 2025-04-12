@@ -1,4 +1,4 @@
-# Avi Shah - Basketball Shot Detector/Tracker - July 2023
+# TODO: Review changes needed here
 from PIL import Image
 from ultralytics import YOLO
 import cv2
@@ -46,14 +46,22 @@ logger = Logger([
 
 
 class ShotDetector:
-    def __init__(self, video_path, on_detect, on_complete, show_vid=False, **kwargs):
+    def __init__(self, 
+                video_path,             # Video path for processing
+                on_detect,              # on_detect(timestamp, success, team_id, shot_location) -> Callback to MatchHandler for when a shot is detected
+                on_complete,            # on_complete(team_id) -> Callback to MatchHandler for when video finishes processing
+                show_vid=False,         # Show CV2 window while processing, for debugging, will significantly slow down program
+                video_id=None,           # 1 or 2
+                **kwargs):
+        
+        #TODO: initialize with team_id, updated based on switch timestamp
         self.model = YOLO(env['weights_path'], verbose=False)
         self.model_shoot = YOLO(env['weights_path_shoot'], verbose=False)
         self.class_names = env['classes']
         self.class_names_shoot = env['classes_shoot']
         self.colors = [(0, 255, 0), (255, 255, 0), (255, 255, 255), (255, 0, 0), (0, 0, 255)]
         self.colors_shoot = [(0, 255, 0), (255, 255, 255), (255, 0, 0), (0, 0, 255)]
-        self.detect_callback = on_detect
+        self.on_detect = on_detect
         self.on_complete = on_complete
         self.show_vid = show_vid
 
@@ -85,17 +93,21 @@ class ShotDetector:
         self.attempt_cooldown = 0
         self.attempt_time = 0
 
-        self.is_match = kwargs.get('is_match', False)
+        # Not needed, these will be handled in MatchHandler
+
+        self.video_id = video_id
+        #TODO: modify init of data members
+        # self.is_match = kwargs.get('is_match', False)
+        # quarters = kwargs.get('quarter_timestamps', [])
+        # quarters = [i for i in quarters if i != '']
+        # is_switched = kwargs.get('is_switched', False)
+        # switch_time = kwargs.get('switch_time', '99:99:99')
         
-        quarters = kwargs.get('quarter_timestamps', [])
-        quarters = [i for i in quarters if i != '']
-        is_switched = kwargs.get('is_switched', False)
-        switch_time = kwargs.get('switch_time', '99:99:99')
-        
-        if not self.is_match:
-            self.score_counter = ScoreCounter(quarters)
-        else:
-            self.score_counter = MatchScoreCounter(quarters, is_switched, switch_time)
+        # TODO: modify scorecounter init
+        # if not self.is_match:
+        #     self.score_counter = ScoreCounter(quarters)
+        # else:
+        #     self.score_counter = MatchScoreCounter(quarters, is_switched, switch_time)
 
         # For marking if the ball / rim have been detected in the current frame
         self.ball_detected = False
@@ -208,6 +220,7 @@ class ShotDetector:
 
                     # Class Name
                     cls = int(box[2])
+                    # print(f"cls: {cls}")
                     current_class = self.class_names[cls]
 
                     center = (int(x1 + w / 2), int(y1 + h / 2))
@@ -264,6 +277,7 @@ class ShotDetector:
 
             if self.show_vid or self.save or self.screenshot:
                 # self.draw_overlay()
+                # self.draw_overlay()
 
                 if self.show_vid:
                     cv2.imshow('Frame', self.frame)
@@ -280,15 +294,18 @@ class ShotDetector:
                     self.out.write(cv2.resize(self.frame, (env['output_width'], env['output_height'])))
 
         # Report score and cleanup upon finish
-        score_report = self.score_counter.report()
-        for k,v in score_report.items():
-            logger.log(INFO, f"{k.ljust(16)} : {v}")
-        self.on_complete(score_report, self.is_match)
+        # score_report = self.score_counter.report()
+        # for k,v in score_report.items():
+        #     logger.log(INFO, f"{k.ljust(16)} : {v}")
+        
+        # self.on_complete(score_report, self.is_match)
         
         # Wait for detection thread to finish
         if self.detection_thread and self.detection_thread.is_alive():
             self.detection_thread.join(timeout=5.0)
             
+        self.on_complete()
+        
         self.cap.release()
         if self.show_vid:
             cv2.destroyAllWindows()
@@ -397,11 +414,25 @@ class ShotDetector:
                         time_string = get_time_string(self.timestamp)
                         self.makes += 1
                         self.attempts += 1
-                        side = self.get_side()
-                        team = self.score_counter.make(time_string, side)
-                        self.detect_callback(get_time_string(self.timestamp-3000), get_time_string(self.timestamp+2000), True, team)
-                        self.should_detect_shot = True
-                        logger.log(INFO, f"[{time_string}] {'Shot made'.ljust(13)} | Side {side} | Team {team}")
+                        
+                        # on_detect(timestamp, success, video_id, shot_location)
+
+                        shot_location, shot_timestamp = self.shot_detection()
+                        
+                        if shot_location:
+                            scaled_shot_location = (shot_location[0] / self.width, shot_location[1] / self.height)
+                        else:
+                            scaled_shot_location = (None, None)
+                        
+                        if shot_timestamp:
+                            #TODO: logic for shot localization
+                            logger.log(INFO, f"Shot detected at {shot_timestamp}  |  Location: {shot_location}")
+
+                        self.on_detect(self.timestamp, True, self.video_id, scaled_shot_location)
+                        # move shoot detection here
+                        # self.should_detect_shot = True
+
+                        # logger.log(INFO, f"[{time_string}] {'Shot made'.ljust(13)} | Side {side} | Team {team}")
                     # else:
                     #     self.detect_callback(max(0, self.timestamp-3000), self.timestamp+2000, False)
                     #     print("attempt made")
@@ -422,11 +453,24 @@ class ShotDetector:
                         time_string = get_time_string(self.timestamp)
                         self.overlay_color = (0, 0, 255)
                         self.fade_counter = self.fade_frames
-                        side = self.get_side()
-                        team = self.score_counter.attempt(time_string, side)
-                        self.detect_callback(get_time_string(self.timestamp-3000), get_time_string(self.timestamp+2000), False, team)
-                        self.should_detect_shot = True
-                        logger.log(INFO, f"[{time_string}] {'Attempt made'.ljust(13)} | Side {side} | Team {team}")
+
+
+                        #TODO: update callbacks based on specs of match handler
+                        # on_detect(timestamp, success, video_id, shot_location)
+                        shot_location, shot_timestamp = self.shot_detection()
+                        if shot_location:
+                            scaled_shot_location = (shot_location[0] / self.width, shot_location[1] / self.height)
+                        else:
+                            scaled_shot_location = (None, None)
+                        
+                        if shot_timestamp:
+                            #TODO: logic for shot localization
+                            logger.log(INFO, f"Shot detected at {shot_timestamp}  |  Location: {shot_location}")
+
+                        self.on_detect(self.timestamp, False, self.video_id, scaled_shot_location)
+                        # move shoot detection here
+                        # self.should_detect_shot = True
+                        # logger.log(INFO, f"[{time_string}] {'Attempt made'.ljust(13)} | Side {side} | Team {team}")
                         self.attempts += 1
                         
                         self.attempt_cooldown = self.MISS_ATTEMPT_COOLDOWN
@@ -698,8 +742,6 @@ class ShotDetector:
 def get_time_string(timestamp):
     timestamp = max(0, timestamp)
 
-    t = str(timedelta(milliseconds=timestamp)).split('.')[0]
-    return datetime.strptime(t, "%H:%M:%S").strftime('%H:%M:%S')
 
 
 if __name__ == "__main__":
