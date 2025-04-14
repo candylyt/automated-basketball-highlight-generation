@@ -1,3 +1,4 @@
+#TODO: Review changes needed with this class -> single side only
 
 class ScoreCounter(object):
     #Handles simple score and shooting counting
@@ -52,7 +53,7 @@ class MatchScoreCounter(ScoreCounter):
         if (not self.has_switched) and (timestamp > self.switch_time):
             self.has_switched = True
         
-        if (side == 0 and not self.has_switched) or (side == 1 and self.has_switched):
+        if (side == 1 and not self.has_switched) or (side == 2 and self.has_switched):
             self.team_A_attempts[self.current_quarter-1] += 1
             return 'A'
         else:
@@ -66,7 +67,7 @@ class MatchScoreCounter(ScoreCounter):
             self.has_switched = True
             print("Side switched")
         
-        if (side == 0 and not self.has_switched) or (side == 1 and self.has_switched):
+        if (side == 1 and not self.has_switched) or (side == 2 and self.has_switched):
             self.team_A_attempts[self.current_quarter-1] += 1
             self.team_A_makes[self.current_quarter-1] += 1
             return 'A'

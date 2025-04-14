@@ -19,6 +19,7 @@ function VideoUpload({
   setIsUploading,
   setIsProcessing,
   setVideoData,
+  setRunId,
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
@@ -38,6 +39,7 @@ function VideoUpload({
   };
 
   const handleModalSubmit = async (videoData) => {
+    console.log(videoData);
     setVideoData(videoData);
     setIsModalOpen(false);
 
@@ -46,7 +48,7 @@ function VideoUpload({
     formData.append("video2", file2);
     formData.append("isMatch", videoData.isMatch);
     formData.append("isSwitched", videoData.isSwitched);
-    formData.append("switchTimestamp", videoData.switchTimestamp);
+    formData.append("switchTimestamp", videoData.formattedSwitchTimestamps);
     formData.append("quarterTimestamps", videoData.formattedTimestamps);
     formData.append("points1", videoData.points1);
     formData.append("points2", videoData.points2);
@@ -62,6 +64,7 @@ function VideoUpload({
       if (response.ok) {
         const data = await response.json();
         console.log("File uploaded successfully:", data);
+        setRunId(data.run_id);
         setIsUploading(false);
         setIsProcessing(true);
       } else {

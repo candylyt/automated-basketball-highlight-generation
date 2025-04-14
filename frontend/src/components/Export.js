@@ -13,7 +13,7 @@ Modal.setAppElement("#root"); // Set the root element for accessibility
 
 const backendPort = process.env.REACT_APP_BACKEND_PORT;
 
-const Export = ({ timestamps, video, isMatch }) => {
+const Export = ({ timestamps, video, isMatch, runId }) => {
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [selectedTimestamps, setSelectedTimestamps] = useState([]);
   const [processing, setProcessing] = useState(false);
@@ -31,12 +31,15 @@ const Export = ({ timestamps, video, isMatch }) => {
     setSelectedTimestamps([]);
   };
 
-  const handleTimestampSelection = (timestamp) => {
+  const handleTimestampSelection = (timestamp, videoId) => {
+    const newEntry = [timestamp, videoId];
     setSelectedTimestamps((prevSelected) => {
-      if (prevSelected.includes(timestamp)) {
-        return prevSelected.filter((t) => t !== timestamp);
+      if (prevSelected.some(([ts, id]) => ts === timestamp && id === videoId)) {
+        return prevSelected.filter(
+          ([ts, id]) => ts !== timestamp || id !== videoId
+        );
       } else {
-        return [...prevSelected, timestamp];
+        return [...prevSelected, newEntry];
       }
     });
   };
@@ -50,28 +53,41 @@ const Export = ({ timestamps, video, isMatch }) => {
     // Sort the timestamps in ascending order
     const sortedTimestamps = [...selectedTimestamps].sort((a, b) => {
       return (
-        convertTimestampToMilliseconds(a) - convertTimestampToMilliseconds(b)
+        convertTimestampToMilliseconds(a[0]) -
+        convertTimestampToMilliseconds(b[0])
       );
     });
 
     // Update the selectedTimestamps state variable
     setSelectedTimestamps(sortedTimestamps);
 
-    // Load the video file
-    await ffmpeg.writeFile("input.mp4", await fetchFile(video));
+    // Load both video files into FFmpeg
+    await ffmpeg.writeFile("video1.mp4", await fetchFile(video.file1));
+    await ffmpeg.writeFile("video2.mp4", await fetchFile(video.file2));
 
     // Trim the video based on each timestamp and save each clip to a temporary file
-    const clipPromises = sortedTimestamps.map((timestamp, index) => {
+    const clipPromises = sortedTimestamps.map(([timestamp, videoId], index) => {
       const clipName = `clip-${index}.mp4`;
+      const inputFile = videoId === 1 ? "video1.mp4" : "video2.mp4";
       return ffmpeg.exec([
         "-i",
-        "input.mp4",
+        inputFile,
         "-ss",
         timestamp,
         "-t",
-        "5",
-        "-c",
-        "copy",
+        "5", // duration of each clip
+        "-r",
+        "30",
+        // "-c",
+        // "copy",
+        "-c:v",
+        "libx264",
+        "-preset",
+        "fast",
+        "-crf",
+        "23",
+        "-c:a",
+        "aac",
         clipName,
       ]);
     });
@@ -80,7 +96,7 @@ const Export = ({ timestamps, video, isMatch }) => {
 
     // Create a file list for concatenation
     const concatList = sortedTimestamps
-      .map((timestamp, index) => `file clip-${index}.mp4`)
+      .map((_, index) => `file clip-${index}.mp4`)
       .join("\n");
     await ffmpeg.writeFile("concat_list.txt", concatList);
 
@@ -104,11 +120,12 @@ const Export = ({ timestamps, video, isMatch }) => {
     );
 
     // Clean up temporary files
-    sortedTimestamps.forEach((timestamp, index) => {
+    sortedTimestamps.forEach((_, index) => {
       ffmpeg.deleteFile(`clip-${index}.mp4`);
     });
     ffmpeg.deleteFile("concat_list.txt");
-    ffmpeg.deleteFile("input.mp4");
+    ffmpeg.deleteFile("video1.mp4");
+    ffmpeg.deleteFile("video2.mp4");
 
     setProcessing(false);
   };
@@ -121,6 +138,7 @@ const Export = ({ timestamps, video, isMatch }) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          run_id: runId,
           game_summary: {
             Date: "February 16, 2025",
             Venue: "Staples Center",
@@ -235,7 +253,7 @@ const Export = ({ timestamps, video, isMatch }) => {
           <label className="stepLabel">Scoring Moments</label>
         )}
         <div className="timestampContainer">
-          {timestamps.scoringTimestampsA.map((timestamp, index) => (
+          {timestamps.scoringTimestampsA.map(([timestamp, videoId], index) => (
             <div key={index} className="timestamp">
               <label htmlFor={`timestamp-${index}`}>{timestamp}</label>
               <input
@@ -243,7 +261,7 @@ const Export = ({ timestamps, video, isMatch }) => {
                 type="checkbox"
                 id={`timestamp-${index}`}
                 value={timestamp}
-                onChange={() => handleTimestampSelection(timestamp)}
+                onChange={() => handleTimestampSelection(timestamp, videoId)}
               />
             </div>
           ))}
@@ -254,7 +272,7 @@ const Export = ({ timestamps, video, isMatch }) => {
           <label className="stepLabel">Shooting Moments</label>
         )}
         <div className="timestampContainer">
-          {timestamps.shootingTimestampsA.map((timestamp, index) => (
+          {timestamps.shootingTimestampsA.map(([timestamp, videoId], index) => (
             <div key={index} className="timestamp">
               <label htmlFor={`timestamp-${index}`}>{timestamp}</label>
               <input
@@ -262,7 +280,7 @@ const Export = ({ timestamps, video, isMatch }) => {
                 type="checkbox"
                 id={`timestamp-${index}`}
                 value={timestamp}
-                onChange={() => handleTimestampSelection(timestamp)}
+                onChange={() => handleTimestampSelection(timestamp, videoId)}
               />
             </div>
           ))}
@@ -270,18 +288,22 @@ const Export = ({ timestamps, video, isMatch }) => {
         {isMatch && <label className="stepLabel">Team B Scoring Moments</label>}
         {isMatch && (
           <div className="timestampContainer">
-            {timestamps.scoringTimestampsB.map((timestamp, index) => (
-              <div key={index} className="timestamp">
-                <label htmlFor={`timestamp-${index}`}>{timestamp}</label>
-                <input
-                  className="timestampCheckbox"
-                  type="checkbox"
-                  id={`timestamp-${index}`}
-                  value={timestamp}
-                  onChange={() => handleTimestampSelection(timestamp)}
-                />
-              </div>
-            ))}
+            {timestamps.scoringTimestampsB.map(
+              ([timestamp, videoId], index) => (
+                <div key={index} className="timestamp">
+                  <label htmlFor={`timestamp-${index}`}>{timestamp}</label>
+                  <input
+                    className="timestampCheckbox"
+                    type="checkbox"
+                    id={`timestamp-${index}`}
+                    value={timestamp}
+                    onChange={() =>
+                      handleTimestampSelection(timestamp, videoId)
+                    }
+                  />
+                </div>
+              )
+            )}
           </div>
         )}
         {isMatch && (
@@ -289,18 +311,22 @@ const Export = ({ timestamps, video, isMatch }) => {
         )}
         {isMatch && (
           <div className="timestampContainer">
-            {timestamps.shootingTimestampsB.map((timestamp, index) => (
-              <div key={index} className="timestamp">
-                <label htmlFor={`timestamp-${index}`}>{timestamp}</label>
-                <input
-                  className="timestampCheckbox"
-                  type="checkbox"
-                  id={`timestamp-${index}`}
-                  value={timestamp}
-                  onChange={() => handleTimestampSelection(timestamp)}
-                />
-              </div>
-            ))}
+            {timestamps.shootingTimestampsB.map(
+              ([timestamp, videoId], index) => (
+                <div key={index} className="timestamp">
+                  <label htmlFor={`timestamp-${index}`}>{timestamp}</label>
+                  <input
+                    className="timestampCheckbox"
+                    type="checkbox"
+                    id={`timestamp-${index}`}
+                    value={timestamp}
+                    onChange={() =>
+                      handleTimestampSelection(timestamp, videoId)
+                    }
+                  />
+                </div>
+              )
+            )}
           </div>
         )}
 

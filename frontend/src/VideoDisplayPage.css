@@ -46,10 +46,21 @@
   height: auto;
 }
 
-.VD-cameraAngleSelected {
+.VD-cameraAngleSelectedOne {
   font-size: 1.5rem;
   font-weight: 500;
-  background-color: lightblue;
+  background-color: rgb(254, 192, 76);
+  border-radius: 5px;
+  padding: 10px;
+  cursor: pointer;
+  width: auto;
+  height: auto;
+}
+
+.VD-cameraAngleSelectedTwo {
+  font-size: 1.5rem;
+  font-weight: 500;
+  background-color: rgb(195, 109, 241);
   border-radius: 5px;
   padding: 10px;
   cursor: pointer;
@@ -149,15 +160,14 @@
   margin-bottom: 20px;
 }
 
-.VD-scoringTimestamp {
+.VD-timestampVideo1 {
   width: 5vw;
   height: 4vh;
   max-height: 150px;
   min-height: 30px;
   max-width: 200px;
   min-width: 50px;
-  background-color: green;
-  color: white;
+  background-color: rgb(254, 192, 76);
   border-radius: 10px;
   margin-right: 3%;
   display: flex;
@@ -167,19 +177,18 @@
   cursor: pointer;
 }
 
-.VD-scoringTimestamp:hover {
-  background-color: #c2bbbb;
+.VD-timestampVideo1:hover {
+  background-color: rgb(248, 204, 124);
 }
 
-.VD-shootingTimestamp {
+.VD-timestampVideo2 {
   width: 5vw;
   height: 4vh;
   max-height: 150px;
   min-height: 30px;
   max-width: 200px;
   min-width: 50px;
-  background-color: red;
-  color: white;
+  background-color: rgb(201, 148, 230);
   border-radius: 10px;
   margin-right: 3%;
   display: flex;
@@ -189,8 +198,8 @@
   cursor: pointer;
 }
 
-.VD-shootingTimestamp:hover {
-  background-color: #c2bbbb;
+.VD-timestampVideo2:hover {
+  background-color: rgb(195, 109, 241);
 }
 
 .VD-error {
