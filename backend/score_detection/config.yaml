@@ -12,10 +12,12 @@ classes_shoot: ["ball", "person", "rim", "shoot"]
 # input: "/home/fyp_gch6/jason/data_gen_vids/hl_ama_la_2.mp4"
 input: "/home/fyp_gch6/jason/data_gen_vids/fg_ama_ha_1.mp4"
 
-
 save_video: False
 output_path: "output"
 upload_path: "uploads"
+data_path: "data"
+report_path: "reports"
+resource_path: "resources"
 output_width: 1280
 output_height: 720
 iou_threshold: 0.4

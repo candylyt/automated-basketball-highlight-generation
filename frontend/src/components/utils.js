@@ -31,8 +31,15 @@ export const convertTimestampToMilliseconds = (timestamp) => {
 };
 
 export const convertTimestampToSeconds = (timestamp) => {
-  const [minutes, seconds] = timestamp.split(":");
-  return parseInt(minutes) * 60 + parseInt(seconds);
+  const parts = timestamp.split(":").map(parseInt);
+
+  if (parts.length === 3) {
+    const [hours, minutes, seconds] = parts;
+    return hours * 3600 + minutes * 60 + seconds;
+  } else {
+    const [minutes, seconds] = parts;
+    return minutes * 60 + seconds;
+  }
 };
 
 export const validateTimestamp = (timestamp) => {

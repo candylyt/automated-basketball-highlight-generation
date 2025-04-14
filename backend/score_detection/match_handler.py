@@ -7,7 +7,8 @@ from score_counter import (
     ScoreCounter
 )
 from statistics import (
-    TeamStatistics
+    TeamStatistics,
+    Shot
 )
 
 from localization import (
@@ -17,6 +18,7 @@ from localization import (
 from utils import get_time_string
 import os
 import uuid
+import json
 
 
 from logger import (
@@ -114,12 +116,13 @@ class MatchHandler:
         # Update stats
 
         timestring = get_time_string(timestamp)
+        shot = None
         with self.lock:
             team_id = self._get_team_from_video_id(video_id, timestring)
             if team_id == 'A':
-                self.stats_team_A.add_shot(timestring, success, mapped_location[0], mapped_location[1])
+                shot = self.stats_team_A.add_shot(timestring, success, mapped_location[0], mapped_location[1])
             elif self.is_match and team_id == 'B':
-                self.stats_team_B.add_shot(timestring, success, mapped_location[0], mapped_location[1])
+                shot = self.stats_team_B.add_shot(timestring, success, mapped_location[0], mapped_location[1])
             
 
         # Forward to main callback
@@ -127,9 +130,9 @@ class MatchHandler:
         end_time = get_time_string(timestamp+2000)
 
         if team_id == 'A':
-            self.shot_data_team_A.append((timestring, success, team_id, mapped_location[0], mapped_location[1]))
+            self.shot_data_team_A.append(shot)
         elif team_id == 'B':
-            self.shot_data_team_B.append((timestring, success, team_id, mapped_location[0], mapped_location[1]))
+            self.shot_data_team_B.append(shot)
 
         if self.on_detection_callback:
             self.on_detection_callback(self.run_id, start_time, end_time, success, team_id, video_id)
@@ -148,39 +151,37 @@ class MatchHandler:
             #TODO: implement and call statistic class here
             if self.video_1_complete and self.video_2_complete:
                 results = {}
-                
+                results['is_match'] = self.is_match
+
                 # Write shot data
-                os.makedirs(f'data/{self.run_id}', exist_ok=True)
                 if self.is_match:
 
                     results['team_A'] = self.stats_team_A.get_statistics()
                     results['team_B'] = self.stats_team_B.get_statistics()
-
-                    if self.shot_data_team_A:
-                        data_A_path = f'data/{self.run_id}/team_A_shot_data.txt'
-                        with open(data_A_path, 'w') as f:
-                            for line in self.shot_data_team_A:
-                                f.write(','.join(map(str, line))+'\n')
-                    
-                    if self.shot_data_team_B:
-                        data_B_path = f'data/{self.run_id}/team_B_shot_data.txt'
-                        with open(data_B_path, 'w') as f:
-                            for line in self.shot_data_team_B:
-                                f.write(','.join(map(str, line))+'\n')
                 
                 else:
 
-                    results = self.stats_team_A.get_statistics()
-                    if self.shot_data_team_A:
-                        data_A_path = f'data/{self.run_id}/shot_data.txt'
-                        with open(data_A_path, 'w') as f:
-                            for line in self.shot_data_team_A:
-                                f.write(','.join(map(str, line))+'\n')
-                
+                    results.update(self.stats_team_A.get_statistics())
                 
                 
                 if self.on_complete_callback:
                     self.on_complete_callback(self.run_id, results, self.is_match)
+
+                os.makedirs(f'data', exist_ok=True)
+
+                # Save shot data to file
+                if self.is_match:
+                    results['team_A']['shot_data'] = [shot.__dict__ for shot in self.shot_data_team_A]
+                    results['team_B']['shot_data'] = [shot.__dict__ for shot in self.shot_data_team_B]
+                else:
+                    results['shot_data'] = [shot.__dict__ for shot in self.shot_data_team_A]
+
+                # Save to JSON file
+                logger.log(INFO, f"Saving results to data/{self.run_id}.json: {results}")
+                with open(f'data/{self.run_id}.json', 'w') as f:
+                    json.dump(results, f, indent=4)
+
+
 
     def _get_team_from_video_id(self, video_id, timestring):
         """Get team ID from video ID and timestring"""

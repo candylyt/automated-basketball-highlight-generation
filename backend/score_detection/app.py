@@ -9,6 +9,7 @@ import os
 import time
 from match_handler import MatchHandler
 import uuid
+import json
 
 from logger import (
     INFO,
@@ -28,6 +29,9 @@ env = yaml.load(open('config.yaml', 'r'), Loader=yaml.SafeLoader)
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = env['upload_path']
+app.config['REPORT_FOLDER'] = env['report_path']
+app.config['DATA_FOLDER'] = env['data_path']
+app.config['RESOURCE_FOLDER'] = env['resource_path']
 socketio = SocketIO(app, cors_allowed_origins="*")
 CORS(app)
 
@@ -185,34 +189,32 @@ def upload_video():
 def generate_report():
     logger.log(INFO, 'generate report')
     try:
-        data = request.json  # Receive JSON data from frontend
-
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], "basketball_game_report.pdf")
-
         # Extract required data from the frontend request
-        run_id = data.get("run_id")
-        game_summary = data.get("game_summary", {})
-        field_goals_stats = data.get("field_goals_stats", {})
-        shot_types_stats = data.get("shot_types_stats", {})
-        shot_zones_stats = data.get("shot_zones_stats", {})
-        match = data.get("match", True)
-        quarter_scores = data.get("quarter_scores", {})
-        quarter_percentages = data.get("quarter_percentages", {})
-        shot_data = data.get("shot_data", [])
-        court_image_path = "court_img.png"  # Ensure this file exists in your backend
+        run_id = request.json.get("run_id")
+
+        if not run_id:
+            return jsonify({"error": "run_id is required"}), 400
+        
+        file_path = os.path.join(app.config['REPORT_FOLDER'], f"{run_id}.pdf")
+        stats_file_path = os.path.join(app.config['DATA_FOLDER'], f"{run_id}.json")
+        
+         # Check if the stats file exists
+        if not os.path.exists(stats_file_path):
+            return jsonify({"error": f"Data file for run_id {run_id} not found"}), 404
+
+        # Load data from the JSON file
+        with open(stats_file_path, "r") as json_file:
+            report_data = json.load(json_file)
+
+        court_image_path = os.path.join(app.config['RESOURCE_FOLDER'], "test.png")  # Ensure this file exists in your backend
+        if not os.path.exists(court_image_path):
+            return jsonify({"error": f"Data file for run_id {run_id} not found"}), 404
 
         # Generate PDF
         generate_basketball_pdf(
             file_path,
-            game_summary,
-            field_goals_stats,
-            shot_types_stats,
-            shot_zones_stats,
-            match,
-            quarter_scores,
-            quarter_percentages,
-            shot_data,
             court_image_path,
+            **report_data
         )
         return send_file(file_path, as_attachment=True, mimetype="application/pdf")
 
@@ -221,4 +223,5 @@ def generate_report():
 
 
 if __name__ == "__main__":
+
     socketio.run(app, debug=True, port=env['flask_port'])

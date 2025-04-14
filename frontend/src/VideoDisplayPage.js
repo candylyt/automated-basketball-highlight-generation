@@ -105,7 +105,11 @@ function VideoDisplayPage({
                 ([ts, id]) => ts === timestamp && id === videoId
               )
             ) {
-              return [...prevTimestamps, newEntry];
+              return [...prevTimestamps, newEntry].sort(
+                ([tsA], [tsB]) =>
+                  convertTimestampToSeconds(tsA) -
+                  convertTimestampToSeconds(tsB)
+              );
             }
             return prevTimestamps;
           });
@@ -117,7 +121,11 @@ function VideoDisplayPage({
                 ([ts, id]) => ts === timestamp && id === videoId
               )
             ) {
-              return [...prevTimestamps, newEntry];
+              return [...prevTimestamps, newEntry].sort(
+                ([tsA], [tsB]) =>
+                  convertTimestampToSeconds(tsA) -
+                  convertTimestampToSeconds(tsB)
+              );
             }
             return prevTimestamps;
           });
@@ -133,7 +141,11 @@ function VideoDisplayPage({
                 ([ts, id]) => ts === timestamp && id === videoId
               )
             ) {
-              return [...prevTimestamps, newEntry];
+              return [...prevTimestamps, newEntry].sort(
+                ([tsA], [tsB]) =>
+                  convertTimestampToSeconds(tsA) -
+                  convertTimestampToSeconds(tsB)
+              );
             }
             return prevTimestamps;
           });
@@ -145,7 +157,11 @@ function VideoDisplayPage({
                 ([ts, id]) => ts === timestamp && id === videoId
               )
             ) {
-              return [...prevTimestamps, newEntry];
+              return [...prevTimestamps, newEntry].sort(
+                ([tsA], [tsB]) =>
+                  convertTimestampToSeconds(tsA) -
+                  convertTimestampToSeconds(tsB)
+              );
             }
             return prevTimestamps;
           });

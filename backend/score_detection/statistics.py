@@ -56,6 +56,8 @@ class TeamStatistics:
         logger.log(INFO, f"Added shot: {shot}")
         self.shots.append(shot)
 
+        return shot
+
     def determine_zone(self, x, y):
         if not x or not y:
             return None
