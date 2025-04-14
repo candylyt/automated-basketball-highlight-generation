@@ -11,19 +11,19 @@
 }
 
 .Court-image {
-  height: 22vh;
+  height: 30vh;
   cursor: crosshair;
   display: flex;
   flex-direction: row;
-  column-gap: 5%;
+  column-gap: 2%;
   position: relative;
 }
 
 .Court-dot {
   position: absolute;
   transform: translate(-50%, -50%);
-  width: 12px;
-  height: 12px;
+  width: 8px;
+  height: 8px;
   background-color: red;
   border-radius: 50%;
 }
@@ -47,7 +47,7 @@
 .Court-frameSelection {
   display: flex;
   flex-direction: row;
-  column-gap: 22%;
+  column-gap: 37.5%;
 }
 
 .Court-frameButton {

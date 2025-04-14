@@ -248,9 +248,9 @@ const Export = ({ timestamps, video, isMatch, runId }) => {
         <h2>Export Options</h2>
         <label className="stepLabel">Step 1: Select Timestamps</label>
         {isMatch ? (
-          <label className="stepLabel">Team A Scoring Moments</label>
+          <label className="stepLabel">Team A Made-Attempts</label>
         ) : (
-          <label className="stepLabel">Scoring Moments</label>
+          <label className="stepLabel">Made-Attempts</label>
         )}
         <div className="timestampContainer">
           {timestamps.scoringTimestampsA.map(([timestamp, videoId], index) => (
@@ -267,9 +267,9 @@ const Export = ({ timestamps, video, isMatch, runId }) => {
           ))}
         </div>
         {isMatch ? (
-          <label className="stepLabel">Team A Shooting Moments</label>
+          <label className="stepLabel">Team A Missed-Attempts</label>
         ) : (
-          <label className="stepLabel">Shooting Moments</label>
+          <label className="stepLabel">Missed-Attempts</label>
         )}
         <div className="timestampContainer">
           {timestamps.shootingTimestampsA.map(([timestamp, videoId], index) => (
@@ -285,7 +285,7 @@ const Export = ({ timestamps, video, isMatch, runId }) => {
             </div>
           ))}
         </div>
-        {isMatch && <label className="stepLabel">Team B Scoring Moments</label>}
+        {isMatch && <label className="stepLabel">Team B Made-Attempts</label>}
         {isMatch && (
           <div className="timestampContainer">
             {timestamps.scoringTimestampsB.map(
@@ -306,9 +306,7 @@ const Export = ({ timestamps, video, isMatch, runId }) => {
             )}
           </div>
         )}
-        {isMatch && (
-          <label className="stepLabel">Team B Shooting Moments</label>
-        )}
+        {isMatch && <label className="stepLabel">Team B Missed-Attempts</label>}
         {isMatch && (
           <div className="timestampContainer">
             {timestamps.shootingTimestampsB.map(
