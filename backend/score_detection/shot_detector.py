@@ -7,7 +7,6 @@ import math
 import numpy as np
 import os, shutil
 import yaml
-import datetime
 from pathlib import Path
 from datetime import timedelta, datetime
 import time
@@ -138,9 +137,9 @@ class ShotDetector:
         self.output_height = env['output_height']
 
         if self.save:
-            output_name = env['output_path'] + '/' + env['input'].split("/")[-1].split('.')[0] + str(datetime.datetime.now()) 
+            output_name = env['output_path'] + '/' + env['input'].split("/")[-1].split('.')[0] + str(datetime.now()) 
             output_name = output_name.replace(':','-').replace('.','-') + ".mp4"
-            logger.log(INFO, "Saving results to: ", output_name)
+            logger.log(INFO, f"Saving results to: {output_name}")
             self.out = cv2.VideoWriter(output_name,  cv2.VideoWriter_fourcc(*'mp4v'), self.frame_rate, (self.output_width, self.output_height))
         
         # Threading components
@@ -191,7 +190,6 @@ class ShotDetector:
                 self.ball_detected, self.rim_detected = False, False
 
                 for box in boxes:
-                    
                     # Only one ball / rim should be detected per frame
                     if self.ball_detected and self.rim_detected:
                         break
@@ -209,10 +207,11 @@ class ShotDetector:
                     # Class Name
                     cls = int(box[2])
                     current_class = self.class_names[cls]
+                    # print(cls, current_class)
 
                     center = (int(x1 + w / 2), int(y1 + h / 2))
 
-                    if (conf > 0.4 and current_class == 'rim' and not self.rim_detected) or (conf > 0.4 and current_class == 'basketball' and not self.ball_detected):
+                    if (conf > 0.4 and current_class == 'rim' and not self.rim_detected) or (conf > 0.4 and current_class == 'ball' and not self.ball_detected):
 
                         if self.show_vid or self.save or self.screenshot:
                             self.draw_bounding_box(current_class, conf, cls, x1, y1, x2, y2)
@@ -220,7 +219,7 @@ class ShotDetector:
                         if current_class == 'rim':
                             self.rim_detected = True
                             self.hoop_pos.append((center, self.frame_count, w, h, conf))
-                        elif current_class == 'basketball':
+                        elif current_class == 'ball':
                             self.ball_detected = True
                             self.ball_pos.append((center, self.frame_count, w, h, conf))
   
@@ -675,8 +674,11 @@ if __name__ == "__main__":
         print(f"Shot made: {makes}")
         print(f"Attempts: {attempts}")
         print(f"Success rate: {success_rate:.2f}%")
+        
+    def dummy_on_complete():
+        return 0
 
-    ShotDetector(env['input'], lambda x,y,z,k: 0, print_stats, False)
+    ShotDetector(env['input'], lambda x,y,z,k: 0, dummy_on_complete, False)
 
 
 
