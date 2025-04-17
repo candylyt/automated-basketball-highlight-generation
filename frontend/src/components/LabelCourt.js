@@ -29,21 +29,21 @@ const PaintAreaLabeler = ({
 
   const handleChangeFrame = (direction) => {
     if (direction === "prev") {
-      if (currentFrame - 1 < 0) {
+      if (currentFrame - 100 < 0) {
         return;
       }
-      captureFrame(video, currentFrame - 1, (frameBlob) => {
+      captureFrame(video, currentFrame - 100, (frameBlob) => {
         const imageUrl = URL.createObjectURL(frameBlob);
-        setCurrentFrame(currentFrame - 1);
+        setCurrentFrame(currentFrame - 100);
         setFrameUrl(imageUrl);
       });
     } else {
-      if (currentFrame + 1 <= totalFrames) {
+      if (currentFrame + 100 <= totalFrames) {
         return;
       }
-      captureFrame(video, currentFrame + 1, (frameBlob) => {
+      captureFrame(video, currentFrame + 100, (frameBlob) => {
         const imageUrl = URL.createObjectURL(frameBlob);
-        setCurrentFrame(currentFrame + 1);
+        setCurrentFrame(currentFrame + 100);
         setFrameUrl(imageUrl);
       });
     }
@@ -104,14 +104,14 @@ const PaintAreaLabeler = ({
             }}
           />
         ))}
-        {currentStep == 0 && (
+        {currentStep === 0 && (
           <img src={`${court_bottomLeft}?v=${Date.now()}`} />
         )}
         {currentStep == 1 && (
           <img src={`${court_bottomRight}?v=${Date.now()}`} />
         )}
-        {currentStep == 2 && <img src={`${court_topLeft}?v=${Date.now()}`} />}
-        {currentStep == 3 && <img src={`${court_topRight}?v=${Date.now()}`} />}
+        {currentStep === 2 && <img src={`${court_topLeft}?v=${Date.now()}`} />}
+        {currentStep === 3 && <img src={`${court_topRight}?v=${Date.now()}`} />}
       </div>
       <div className="Court-frameSelection">
         <div

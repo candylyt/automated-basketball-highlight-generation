@@ -31,7 +31,7 @@ export const convertTimestampToMilliseconds = (timestamp) => {
 };
 
 export const convertTimestampToSeconds = (timestamp) => {
-  const parts = timestamp.split(":").map(parseInt);
+  const parts = timestamp.split(":").map((part) => parseInt(part, 10));
 
   if (parts.length === 3) {
     const [hours, minutes, seconds] = parts;

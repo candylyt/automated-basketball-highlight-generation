@@ -16,6 +16,7 @@ const UserGuide = ({ isOpen, onRequestClose, onSubmit }) => {
     "The video should be in MP4 format. The maximum file size is 5GB.",
     "The video should be at least 30 seconds long and no longer than 2 hours.",
     "The video should be in landscape mode. Portrait videos will not be accepted.",
+    "If two footages are uploaded for full-court matches, they MUST have IDENTICAL codecs to ensure proper concatenation during highlight generation.",
     "Team-based statistics are only available for full-court matches. For half-court matches, only overall statistics that include both teams will be provided.",
     "We use FIBA court dimensions for all calculations. There might be slight deviation if your court dimensions differ.",
     "The video will be discarded after all processing is completed. We do not store any videos on our servers.",

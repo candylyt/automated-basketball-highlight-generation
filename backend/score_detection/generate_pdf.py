@@ -80,7 +80,7 @@ def generate_shooting_heatmap(shot_data, output_file, court_image_path, title):
     # Convert to RGB
     # court_img = cv2.cvtColor(court_img, cv2.COLOR_BGR2RGB)
 
-    fig, ax = plt.subplots(figsize=(8, 8))
+    fig, ax = plt.subplots(figsize=(10, 8))
     ax.imshow(court_img, extent=[-0.5, 300, 280, -0.5])
     # ax.set_aspect('auto')  # Ensure the aspect ratio is correct
     
