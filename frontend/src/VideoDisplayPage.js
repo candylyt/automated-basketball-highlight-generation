@@ -13,39 +13,56 @@ import {
 Modal.setAppElement("#root");
 
 function VideoDisplayPage({
+  runId,
   videoData,
   isUploading,
   isProcessing,
   setIsProcessing,
 }) {
   const location = useLocation();
-  const { file } = location.state || {};
+  const { file1, file2 } = location.state || {};
+
+  const [selectedAngle, setSelectedAngle] = useState(1);
+  const [report, setReport] = useState(null);
 
   // Team A Data
   const [scoringTimestampsA, setScoringTimestampsA] = useState([]);
   const [shootingTimestampsA, setShootingTimestampsA] = useState([]);
-  const [makesA, setMakesA] = useState([]);
-  const [attemptsA, setAttemptsA] = useState([]);
 
   // Team B Data
   const [scoringTimestampsB, setScoringTimestampsB] = useState([]);
   const [shootingTimestampsB, setShootingTimestampsB] = useState([]);
-  const [makesB, setMakesB] = useState([]);
-  const [attemptsB, setAttemptsB] = useState([]);
 
   const [isConnected, setIsConnected] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleTimestampClick = (timestamp) => {
-    const seconds = convertTimestampToSeconds(timestamp);
-    const video = document.querySelector("video");
-    video.currentTime = seconds;
-    video.play();
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
+  const [pendingTimestamp, setPendingTimestamp] = useState(null);
+
+  const handleTimestampClick = (timestamp, videoId) => {
+    setSelectedAngle(videoId); // Change the camera angle
+    setPendingTimestamp({ timestamp, videoId }); // Store the pending action
   };
+
+  useEffect(() => {
+    if (pendingTimestamp) {
+      const { timestamp, videoId } = pendingTimestamp;
+      const seconds = convertTimestampToSeconds(timestamp);
+      const video = document.getElementById(`video${videoId}`);
+
+      if (video) {
+        video.currentTime = seconds;
+        video.play();
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth",
+        });
+      } else {
+        console.error(`Video with ID video${videoId} not found.`);
+      }
+
+      setPendingTimestamp(null); // Clear the pending action
+    }
+  }, [selectedAngle, pendingTimestamp]);
 
   const handleReturnHome = () => {
     window.location.href = "/";
@@ -74,24 +91,33 @@ function VideoDisplayPage({
       setIsProcessing(false);
       console.log("Shooting detected:", data);
 
-      // const timestamp = convertMillisecondsToTimestamp(data.start_time);
       const timestamp = convertTimestamp(data.start_time);
+      const videoId = data.video_id;
+      const newEntry = [timestamp, videoId];
 
       // Scoring Moments
       if (data.success) {
         // Add the timestamp to Team A
         if (data.team === "A" || !data.team) {
           setScoringTimestampsA((prevTimestamps) => {
-            if (!prevTimestamps.includes(timestamp)) {
-              return [...prevTimestamps, timestamp];
+            if (
+              !prevTimestamps.some(
+                ([ts, id]) => ts === timestamp && id === videoId
+              )
+            ) {
+              return [...prevTimestamps, newEntry];
             }
             return prevTimestamps;
           });
         } else {
           // Add the timestamp to Team B
           setScoringTimestampsB((prevTimestamps) => {
-            if (!prevTimestamps.includes(timestamp)) {
-              return [...prevTimestamps, timestamp];
+            if (
+              !prevTimestamps.some(
+                ([ts, id]) => ts === timestamp && id === videoId
+              )
+            ) {
+              return [...prevTimestamps, newEntry];
             }
             return prevTimestamps;
           });
@@ -102,16 +128,24 @@ function VideoDisplayPage({
         // Add the timestamp to Team A
         if (data.team === "A" || !data.team) {
           setShootingTimestampsA((prevTimestamps) => {
-            if (!prevTimestamps.includes(timestamp)) {
-              return [...prevTimestamps, timestamp];
+            if (
+              !prevTimestamps.some(
+                ([ts, id]) => ts === timestamp && id === videoId
+              )
+            ) {
+              return [...prevTimestamps, newEntry];
             }
             return prevTimestamps;
           });
         } else {
           // Add the timestamp to Team B
           setShootingTimestampsB((prevTimestamps) => {
-            if (!prevTimestamps.includes(timestamp)) {
-              return [...prevTimestamps, timestamp];
+            if (
+              !prevTimestamps.some(
+                ([ts, id]) => ts === timestamp && id === videoId
+              )
+            ) {
+              return [...prevTimestamps, newEntry];
             }
             return prevTimestamps;
           });
@@ -123,16 +157,7 @@ function VideoDisplayPage({
     socket.on("processing_complete", (data) => {
       console.log("Processing complete:", data);
       setIsProcessing(false);
-
-      if (data.is_match) {
-        setMakesA(data.team_A_makes);
-        setAttemptsA(data.team_A_attempts);
-        setMakesB(data.team_B_makes);
-        setAttemptsB(data.team_B_attempts);
-      } else {
-        setMakesA(data.makes);
-        setAttemptsA(data.attempts);
-      }
+      setReport(data);
       setIsModalOpen(true);
       socket.disconnect();
     });
@@ -150,33 +175,68 @@ function VideoDisplayPage({
   return (
     <div className="VD-background">
       <Header />
-      {file ? (
+      {file1 ? (
         <div className="VD-container">
           <div className="VD-videoContainer">
-            <video controls>
-              <source src={URL.createObjectURL(file)} type={file.type} />
-            </video>
+            {file2 && (
+              <div className="VD-cameraSelection">
+                <div
+                  className={
+                    selectedAngle === 1
+                      ? "VD-cameraAngleSelectedOne"
+                      : "VD-cameraAngle"
+                  }
+                  onClick={() => setSelectedAngle(1)}
+                >
+                  Camera Angle 1
+                </div>
+                <div
+                  className={
+                    selectedAngle === 2
+                      ? "VD-cameraAngleSelectedTwo"
+                      : "VD-cameraAngle"
+                  }
+                  onClick={() => setSelectedAngle(2)}
+                >
+                  Camera Angle 2
+                </div>
+              </div>
+            )}
+            {selectedAngle === 1 && (
+              <video id="video1" controls>
+                <source src={URL.createObjectURL(file1)} type={file1.type} />
+              </video>
+            )}
+            {selectedAngle === 2 && (
+              <video id="video2" controls>
+                <source src={URL.createObjectURL(file2)} type={file2.type} />
+              </video>
+            )}
             <div className="VD-timestamps">
               <div
                 className={
-                  videoData.isMatch
+                  videoData && videoData.isMatch
                     ? "VD-timestampsTeam"
                     : "VD-timestampsNoTeam"
                 }
               >
-                {videoData.isMatch && (
+                {videoData && videoData.isMatch && (
                   <div className="VD-timestampTeamTitle">Team A</div>
                 )}
                 <div className="VD-timestampTitle">
                   Scoring Moment Timestamps
                 </div>
                 <div className="VD-timestampsContainer">
-                  {scoringTimestampsA.map((timestamp, index) => (
+                  {scoringTimestampsA.map(([timestamp, videoId], index) => (
                     <div
                       key={index}
-                      className="VD-scoringTimestamp"
+                      className={
+                        videoId === 1
+                          ? "VD-timestampVideo1"
+                          : "VD-timestampVideo2"
+                      }
                       onClick={() => {
-                        handleTimestampClick(timestamp);
+                        handleTimestampClick(timestamp, videoId);
                       }}
                     >
                       {timestamp}
@@ -187,12 +247,16 @@ function VideoDisplayPage({
                   Shooting Moment Timestamps
                 </div>
                 <div className="VD-timestampsContainer">
-                  {shootingTimestampsA.map((timestamp, index) => (
+                  {shootingTimestampsA.map(([timestamp, videoId], index) => (
                     <div
                       key={index}
-                      className="VD-shootingTimestamp"
+                      className={
+                        videoId === 1
+                          ? "VD-timestampVideo1"
+                          : "VD-timestampVideo2"
+                      }
                       onClick={() => {
-                        handleTimestampClick(timestamp);
+                        handleTimestampClick(timestamp, videoId);
                       }}
                     >
                       {timestamp}
@@ -200,7 +264,7 @@ function VideoDisplayPage({
                   ))}
                 </div>
               </div>
-              {videoData.isMatch && (
+              {videoData && videoData.isMatch && (
                 <div className="VD-timestampsTeam">
                   <div className="VD-timestampTeamTitle">Team B</div>
 
@@ -208,12 +272,16 @@ function VideoDisplayPage({
                     Scoring Moment Timestamps
                   </div>
                   <div className="VD-timestampsContainer">
-                    {scoringTimestampsB.map((timestamp, index) => (
+                    {scoringTimestampsB.map(([timestamp, videoId], index) => (
                       <div
                         key={index}
-                        className="VD-scoringTimestamp"
+                        className={
+                          videoId === 1
+                            ? "VD-timestampVideo1"
+                            : "VD-timestampVideo2"
+                        }
                         onClick={() => {
-                          handleTimestampClick(timestamp);
+                          handleTimestampClick(timestamp, videoId);
                         }}
                       >
                         {timestamp}
@@ -224,12 +292,16 @@ function VideoDisplayPage({
                     Shooting Moment Timestamps
                   </div>
                   <div className="VD-timestampsContainer">
-                    {shootingTimestampsB.map((timestamp, index) => (
+                    {shootingTimestampsB.map(([timestamp, videoId], index) => (
                       <div
                         key={index}
-                        className="VD-shootingTimestamp"
+                        className={
+                          videoId === 1
+                            ? "VD-timestampVideo1"
+                            : "VD-timestampVideo2"
+                        }
                         onClick={() => {
-                          handleTimestampClick(timestamp);
+                          handleTimestampClick(timestamp, videoId);
                         }}
                       >
                         {timestamp}
@@ -260,7 +332,6 @@ function VideoDisplayPage({
             )}
           </div>
           <Statistics
-            data={{ makesA, makesB, attemptsA, attemptsB }}
             videoData={videoData}
             timestamps={{
               scoringTimestampsA,
@@ -268,7 +339,9 @@ function VideoDisplayPage({
               shootingTimestampsA,
               shootingTimestampsB,
             }}
-            video={file}
+            video={{ file1, file2 }}
+            report={report}
+            runId={runId}
           />
           <Modal
             isOpen={isModalOpen}
