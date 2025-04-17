@@ -137,6 +137,7 @@ class ShotDetector:
         self.output_height = env['output_height']
 
         if self.save:
+            os.makedirs(env['output_path'], exist_ok=True)
             output_name = env['output_path'] + '/' + env['input'].split("/")[-1].split('.')[0] + str(datetime.now()) 
             output_name = output_name.replace(':','-').replace('.','-') + ".mp4"
             logger.log(INFO, f"Saving results to: {output_name}")
@@ -237,7 +238,7 @@ class ShotDetector:
                 self.attempt_cooldown -= 1
 
             if self.show_vid or self.save or self.screenshot:
-                # self.draw_overlay()
+                self.draw_overlay()
                 # self.draw_overlay()
 
                 if self.show_vid:
@@ -268,6 +269,9 @@ class ShotDetector:
         self.on_complete()
         
         self.cap.release()
+        
+        if self.save:
+            self.out.release()
         if self.show_vid:
             cv2.destroyAllWindows()
 

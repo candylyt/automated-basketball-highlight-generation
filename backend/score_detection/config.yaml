@@ -14,7 +14,8 @@ classes_shoot: ["ball", "person", "rim", "shoot"]
 # input: "/home/fyp_gch6/jason/testing_video/amateur_clean_low.mp4"
 # input: "/home/fyp_gch6/jason/data_gen_vids/hl_prof_2_converted.mp4"
 # input: "/home/fyp_gch6/jason/data_gen_vids/hl_ama_la_2.mp4"
-input: "/home/fyp_gch6/jason/data_gen_vids/jch.mp4"
+# input: "/home/fyp_gch6/jason/data_gen_vids/jch.mp4"
+input: "uploads/VIDEO-2025-04-07-16-26-55.mp4"
 
 
 save_video: True
