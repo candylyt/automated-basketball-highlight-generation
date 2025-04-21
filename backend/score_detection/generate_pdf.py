@@ -124,7 +124,7 @@ def generate_zone_heatmap(shot_data, output_file, court_image_path, title):
         else:
             ax.text(zone_coordinates[i][0], zone_coordinates[i][1], str(data), fontsize=20, ha='center', va='center', color='black', rotation=90 if i == 7 or i == 8 else 0)
 
-    ax.set_title(title, fontsize=20)
+    ax.set_title(title, fontsize=30, pad=20)
     ax.axis("off")
     plt.tight_layout()
     plt.savefig(output_file)
