@@ -59,7 +59,7 @@ def generate_shooting_stats_chart(match, quarter_makes, quarter_attempts, chart_
         plt.plot(quarters, team_a_makes, marker='o', linestyle='-', color='b', label='Team A (Makes)')
         plt.plot(quarters, team_a_attempts, marker='o', linestyle='dotted', color='b', label='Team A (Attempts)')
         plt.plot(quarters, team_b_makes, marker='s', linestyle='-', color='r', label='Team B (Makes)')
-        plt.plot(quarters, team_b_attempts, marker='s', linestyle='dotted', color='r', label='Team A (Attempts)')
+        plt.plot(quarters, team_b_attempts, marker='s', linestyle='dotted', color='r', label='Team B (Attempts)')
         plt.legend(loc="center left", bbox_to_anchor=(1, 0.5), fontsize=15)
     else:
         makes = quarter_makes
