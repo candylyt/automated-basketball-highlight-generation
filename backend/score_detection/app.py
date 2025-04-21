@@ -206,7 +206,7 @@ def generate_report():
         with open(stats_file_path, "r") as json_file:
             report_data = json.load(json_file)
 
-        court_image_path = os.path.join(app.config['RESOURCE_FOLDER'], "test.png")  # Ensure this file exists in your backend
+        court_image_path = os.path.join(app.config['RESOURCE_FOLDER'], "court_map.jpg")  # Ensure this file exists in your backend
         if not os.path.exists(court_image_path):
             return jsonify({"error": f"Data file for run_id {run_id} not found"}), 404
 

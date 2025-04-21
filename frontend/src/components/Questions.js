@@ -254,7 +254,7 @@ function Questions({
             Add Quarter
           </button>
         </div>
-        {frameUrl1 && (
+        {frameUrl1 && file1 && (
           <LabelCourt
             video={file1}
             camera={1}
@@ -265,7 +265,7 @@ function Questions({
             updateImageDimensions={updateImageDimensions}
           />
         )}
-        {frameUrl2 && (
+        {frameUrl2 && file2 && (
           <LabelCourt
             video={file2}
             camera={2}
