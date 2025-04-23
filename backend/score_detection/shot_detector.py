@@ -248,7 +248,7 @@ class ShotDetector:
                         break
 
                 if self.screen_shot_moment:
-                    cv2.imwrite(f"{self.screen_shot_path}/{self.screen_shot_count}.png", self.frame)
+                    cv2.imwrite(f"{self.screen_shot_path}/{self.screen_shot_count} | {get_time_string(self.timestamp)}.png", self.frame)
                     self.screen_shot_moment = False
                     self.screen_shot_count += 1
 
