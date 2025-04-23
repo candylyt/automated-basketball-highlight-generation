@@ -127,7 +127,6 @@
 
 .verticalDivider {
   width: 3px;
-  height: cal(10px + 2vmin);
   background-color: #e0e0e0;
   margin-left: 2vw;
   margin-right: 1.5vw;
@@ -140,6 +139,10 @@
 }
 
 .number {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  width: 120px;
   font-size: calc(20px + 3vmin);
 }
 
@@ -170,10 +173,10 @@
 }
 
 .export {
-  position: absolute;
-  bottom: 5%;
   display: flex;
-  left: 10vmin;
+  margin-top: auto;
+  margin-bottom: 5%;
+  justify-content: center;
   font-size: calc(10px + 2vmin);
   font-weight: 600;
   cursor: pointer;

@@ -105,7 +105,11 @@ function VideoDisplayPage({
                 ([ts, id]) => ts === timestamp && id === videoId
               )
             ) {
-              return [...prevTimestamps, newEntry];
+              return [...prevTimestamps, newEntry].sort(
+                ([tsA], [tsB]) =>
+                  convertTimestampToSeconds(tsA) -
+                  convertTimestampToSeconds(tsB)
+              );
             }
             return prevTimestamps;
           });
@@ -117,7 +121,11 @@ function VideoDisplayPage({
                 ([ts, id]) => ts === timestamp && id === videoId
               )
             ) {
-              return [...prevTimestamps, newEntry];
+              return [...prevTimestamps, newEntry].sort(
+                ([tsA], [tsB]) =>
+                  convertTimestampToSeconds(tsA) -
+                  convertTimestampToSeconds(tsB)
+              );
             }
             return prevTimestamps;
           });
@@ -133,7 +141,11 @@ function VideoDisplayPage({
                 ([ts, id]) => ts === timestamp && id === videoId
               )
             ) {
-              return [...prevTimestamps, newEntry];
+              return [...prevTimestamps, newEntry].sort(
+                ([tsA], [tsB]) =>
+                  convertTimestampToSeconds(tsA) -
+                  convertTimestampToSeconds(tsB)
+              );
             }
             return prevTimestamps;
           });
@@ -145,7 +157,11 @@ function VideoDisplayPage({
                 ([ts, id]) => ts === timestamp && id === videoId
               )
             ) {
-              return [...prevTimestamps, newEntry];
+              return [...prevTimestamps, newEntry].sort(
+                ([tsA], [tsB]) =>
+                  convertTimestampToSeconds(tsA) -
+                  convertTimestampToSeconds(tsB)
+              );
             }
             return prevTimestamps;
           });
@@ -223,9 +239,7 @@ function VideoDisplayPage({
                 {videoData && videoData.isMatch && (
                   <div className="VD-timestampTeamTitle">Team A</div>
                 )}
-                <div className="VD-timestampTitle">
-                  Scoring Moment Timestamps
-                </div>
+                <div className="VD-timestampTitle">Made-Attempt Timestamps</div>
                 <div className="VD-timestampsContainer">
                   {scoringTimestampsA.map(([timestamp, videoId], index) => (
                     <div
@@ -244,7 +258,7 @@ function VideoDisplayPage({
                   ))}
                 </div>
                 <div className="VD-timestampTitle">
-                  Shooting Moment Timestamps
+                  Missed-Attempt Timestamps
                 </div>
                 <div className="VD-timestampsContainer">
                   {shootingTimestampsA.map(([timestamp, videoId], index) => (
@@ -269,7 +283,7 @@ function VideoDisplayPage({
                   <div className="VD-timestampTeamTitle">Team B</div>
 
                   <div className="VD-timestampTitle">
-                    Scoring Moment Timestamps
+                    Made-Attempt Timestamps
                   </div>
                   <div className="VD-timestampsContainer">
                     {scoringTimestampsB.map(([timestamp, videoId], index) => (
@@ -289,7 +303,7 @@ function VideoDisplayPage({
                     ))}
                   </div>
                   <div className="VD-timestampTitle">
-                    Shooting Moment Timestamps
+                    Missed-Attempt Timestamps
                   </div>
                   <div className="VD-timestampsContainer">
                     {shootingTimestampsB.map(([timestamp, videoId], index) => (

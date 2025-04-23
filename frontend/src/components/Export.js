@@ -75,19 +75,19 @@ const Export = ({ timestamps, video, isMatch, runId }) => {
         "-ss",
         timestamp,
         "-t",
-        "5", // duration of each clip
+        "7", // duration of each clip
         "-r",
         "30",
-        // "-c",
-        // "copy",
-        "-c:v",
-        "libx264",
-        "-preset",
-        "fast",
-        "-crf",
-        "23",
-        "-c:a",
-        "aac",
+        "-c",
+        "copy",
+        // "-c:v",
+        // "libx264",
+        // "-preset",
+        // "fast",
+        // "-crf",
+        // "23",
+        // "-c:a",
+        // "aac",
         clipName,
       ]);
     });
@@ -139,72 +139,6 @@ const Export = ({ timestamps, video, isMatch, runId }) => {
         },
         body: JSON.stringify({
           run_id: runId,
-          game_summary: {
-            Date: "February 16, 2025",
-            Venue: "Staples Center",
-            Teams: "Team A vs Team B",
-            Final_Score: "102 - 97",
-          },
-          field_goals_stats: {
-            FGM: [38, 35],
-            FGA: [82, 78],
-            FG_Percent: ["46.3%", "44.9%"],
-            FTM: [20, 18],
-            FTA: [24, 22],
-            FT_Percent: ["83.3%", "81.8%"],
-            ThreePM: [6, 7],
-            ThreePA: [22, 25],
-            ThreeP_Percent: ["27.3%", "28.0%"],
-            eFG: ["50.6%", "49.5%"],
-            TS: ["55.4%", "54.2%"],
-          },
-          shot_types_stats: {
-            Contested_Made: [10, 8],
-            Contested_Attempted: [25, 20],
-            Contested_Percent: ["40%", "40%"],
-            Uncontested_Made: [28, 27],
-            Uncontested_Attempted: [57, 58],
-            Uncontested_Percent: ["49.1%", "46.6%"],
-            Total_Made: [38, 35],
-            Total_Attempted: [82, 78],
-            Total_Percent: ["46.3%", "44.9%"],
-          },
-          shot_zones_stats: {
-            Paint_Area_Made: [10, 8],
-            Paint_Area_Attempted: [25, 20],
-            Paint_Area_Percent: ["40%", "40%"],
-            Mid_Range_Made: [28, 27],
-            Mid_Range_Attempted: [57, 58],
-            Mid_Range_Percent: ["49.1%", "46.6%"],
-            Three_Point_Made: [38, 35],
-            Three_Point_Attempted: [82, 78],
-            Three_Point_Percent: ["46.3%", "44.9%"],
-          },
-          match: true,
-          quarter_scores: {
-            Q1: [28, 24],
-            Q2: [26, 27],
-            Q3: [22, 24],
-            Q4: [26, 22],
-          },
-          quarter_percentages: {
-            Q1: [45.2, 40.8],
-            Q2: [42.5, 38.7],
-            Q3: [47.1, 41.3],
-            Q4: [50.8, 44.2],
-          },
-          shot_data: [
-            [4, 24, "A"],
-            [11, 25, "A"],
-            [6, 20, "A"],
-            [4, 25, "A"],
-            [5, 22, "A"],
-            [3, 4, "B"],
-            [10, 5, "B"],
-            [7, 6, "B"],
-            [9, 3, "B"],
-            [6, 8, "B"],
-          ],
         }),
       });
 
@@ -248,9 +182,9 @@ const Export = ({ timestamps, video, isMatch, runId }) => {
         <h2>Export Options</h2>
         <label className="stepLabel">Step 1: Select Timestamps</label>
         {isMatch ? (
-          <label className="stepLabel">Team A Scoring Moments</label>
+          <label className="stepLabel">Team A Made-Attempts</label>
         ) : (
-          <label className="stepLabel">Scoring Moments</label>
+          <label className="stepLabel">Made-Attempts</label>
         )}
         <div className="timestampContainer">
           {timestamps.scoringTimestampsA.map(([timestamp, videoId], index) => (
@@ -267,9 +201,9 @@ const Export = ({ timestamps, video, isMatch, runId }) => {
           ))}
         </div>
         {isMatch ? (
-          <label className="stepLabel">Team A Shooting Moments</label>
+          <label className="stepLabel">Team A Missed-Attempts</label>
         ) : (
-          <label className="stepLabel">Shooting Moments</label>
+          <label className="stepLabel">Missed-Attempts</label>
         )}
         <div className="timestampContainer">
           {timestamps.shootingTimestampsA.map(([timestamp, videoId], index) => (
@@ -285,7 +219,7 @@ const Export = ({ timestamps, video, isMatch, runId }) => {
             </div>
           ))}
         </div>
-        {isMatch && <label className="stepLabel">Team B Scoring Moments</label>}
+        {isMatch && <label className="stepLabel">Team B Made-Attempts</label>}
         {isMatch && (
           <div className="timestampContainer">
             {timestamps.scoringTimestampsB.map(
@@ -306,9 +240,7 @@ const Export = ({ timestamps, video, isMatch, runId }) => {
             )}
           </div>
         )}
-        {isMatch && (
-          <label className="stepLabel">Team B Shooting Moments</label>
-        )}
+        {isMatch && <label className="stepLabel">Team B Missed-Attempts</label>}
         {isMatch && (
           <div className="timestampContainer">
             {timestamps.shootingTimestampsB.map(

@@ -29,7 +29,7 @@ function VideoUpload({
   const handleChange = async (video) => {
     setIsUploading(true);
     setFile1(video);
-    captureFrame(video, (frameBlob) => {
+    captureFrame(video, 100, (frameBlob) => {
       const imageUrl = URL.createObjectURL(frameBlob);
       setFrameUrl1(imageUrl);
       setIsGuideModalOpen(true);
@@ -108,7 +108,9 @@ function VideoUpload({
         isOpen={isModalOpen}
         frameUrl1={frameUrl1}
         frameUrl2={frameUrl2}
+        setFrameUrl1={setFrameUrl1}
         setFrameUrl2={setFrameUrl2}
+        file1={file1}
         file2={file2}
         setFile2={setFile2}
         onRequestClose={() => {

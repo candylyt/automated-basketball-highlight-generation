@@ -13,7 +13,9 @@ function Questions({
   isOpen,
   frameUrl1,
   frameUrl2,
+  setFrameUrl1,
   setFrameUrl2,
+  file1,
   file2,
   setFile2,
   onRequestClose,
@@ -56,7 +58,7 @@ function Questions({
 
   const handleChange = async (video) => {
     setFile2(video);
-    captureFrame(video, (frameBlob) => {
+    captureFrame(video, 100, (frameBlob) => {
       const imageUrl = URL.createObjectURL(frameBlob);
       setFrameUrl2(imageUrl);
     });
@@ -252,21 +254,25 @@ function Questions({
             Add Quarter
           </button>
         </div>
-        {frameUrl1 && (
+        {frameUrl1 && file1 && (
           <LabelCourt
+            video={file1}
             camera={1}
             imageUrl={frameUrl1}
             points={points1}
             setPoints={setPoints1}
+            setFrameUrl={setFrameUrl1}
             updateImageDimensions={updateImageDimensions}
           />
         )}
-        {frameUrl2 && (
+        {frameUrl2 && file2 && (
           <LabelCourt
+            video={file2}
             camera={2}
             imageUrl={frameUrl2}
             points={points2}
             setPoints={setPoints2}
+            setFrameUrl={setFrameUrl2}
             updateImageDimensions={updateImageDimensions}
           />
         )}

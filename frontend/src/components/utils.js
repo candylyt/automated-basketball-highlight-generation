@@ -31,8 +31,15 @@ export const convertTimestampToMilliseconds = (timestamp) => {
 };
 
 export const convertTimestampToSeconds = (timestamp) => {
-  const [minutes, seconds] = timestamp.split(":");
-  return parseInt(minutes) * 60 + parseInt(seconds);
+  const parts = timestamp.split(":").map((part) => parseInt(part, 10));
+
+  if (parts.length === 3) {
+    const [hours, minutes, seconds] = parts;
+    return hours * 3600 + minutes * 60 + seconds;
+  } else {
+    const [minutes, seconds] = parts;
+    return minutes * 60 + seconds;
+  }
 };
 
 export const validateTimestamp = (timestamp) => {
@@ -62,7 +69,7 @@ export const sumArray = (arr) => {
   return arr.reduce((acc, num) => acc + num, 0);
 };
 
-export const captureFrame = (videoFile, callback) => {
+export const captureFrame = (videoFile, frameNumber, callback) => {
   const video = document.createElement("video");
   video.src = URL.createObjectURL(videoFile);
   video.crossOrigin = "anonymous";
@@ -70,7 +77,7 @@ export const captureFrame = (videoFile, callback) => {
 
   video.onloadedmetadata = () => {
     const estimatedFps = 30; // You can refine this logic
-    const targetTime = 100 / estimatedFps;
+    const targetTime = frameNumber / estimatedFps;
     video.currentTime = targetTime;
   };
 
