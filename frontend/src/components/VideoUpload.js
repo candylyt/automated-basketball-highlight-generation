@@ -56,6 +56,7 @@ function VideoUpload({
     formData.append("imageDimensions2", videoData.imageDimensions2);
 
     try {
+      
       const response = await fetch(`${backendPort}/upload`, {
         method: "POST",
         body: formData,

@@ -126,8 +126,8 @@ class MatchHandler:
             
 
         # Forward to main callback
-        start_time = get_time_string(timestamp-3000)
-        end_time = get_time_string(timestamp+2000)
+        start_time = get_time_string(timestamp-4000)
+        end_time = get_time_string(timestamp+5000)
 
         if team_id == 'A':
             self.shot_data_team_A.append(shot)

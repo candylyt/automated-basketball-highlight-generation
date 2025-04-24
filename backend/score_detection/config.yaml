@@ -1,21 +1,23 @@
-weights_path: "weights/20250115best.pt"
-# weights_path: "weights/03102025_best.pt"
+# weights_path: "weights/20250115best.pt"
+# weights_path: "weights/best_ba.pt"
+weights_path: "weights/04242025_shot_detector.pt"
 weights_path_shoot: "weights/03102025_best.pt"
-# classes: ["basketball", "person", "rim", "shoot"]
-classes: ["ball", "made", "person", "rim", "shoot"]
 
+classes: ["ball", "rim"]
 classes_shoot: ["ball", "person", "rim", "shoot"]
-# input: "uploads/nba1.mp4"
 
+# input: "uploads/nba1.mp4"
 # input: "uploads/nba1.mp4"
 # input: 'uploads/amateur2.mp4'
-# input: "/home/fyp_gch6/jason/testing_video/jch_4.MP4"
+input: "/home/fyp_gch6/jason/testing_video/jch_7.mp4"
 # input: "/home/fyp_gch6/jason/testing_video/nba_3.mp4"
 # input: "/home/fyp_gch6/jason/testing_video/amateur_clean_low.mp4"
 # input: "/home/fyp_gch6/jason/data_gen_vids/hl_prof_2_converted.mp4"
 # input: "/home/fyp_gch6/jason/data_gen_vids/hl_ama_la_2.mp4"
 # input: "/home/fyp_gch6/jason/data_gen_vids/jch.mp4"
-input: "uploads/VIDEO-2025-04-07-16-26-55.mp4"
+# input: "uploads/VIDEO-2025-04-07-16-26-55.mp4"
+# input: "/home/fyp_gch6/jason/testing_video/hl_prof_1_cut.mp4"
+# input: "/home/fyp_gch6/jason/testing_video/fix_cam.mp4"
 
 save_video: True
 output_path: "output"
