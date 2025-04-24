@@ -19,8 +19,6 @@ input: "/home/fyp_gch6/jason/testing_video/jch_7.mp4"
 # input: "/home/fyp_gch6/jason/testing_video/hl_prof_1_cut.mp4"
 # input: "/home/fyp_gch6/jason/testing_video/fix_cam.mp4"
 
-
-device: 1
 save_video: True
 output_path: "output"
 upload_path: "uploads"
