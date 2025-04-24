@@ -64,10 +64,10 @@ class ShotDetector:
 
         # for debug
         self.video_name = video_path.split("/")[-1].replace(".mp4", "")
-        self.output_true_shot = f"true_shot_frames_{self.video_name}"
-        self.output_all_shot = f"all_shot_frames_{self.video_name}"
-        os.makedirs(self.output_true_shot, exist_ok=True)
-        os.makedirs(self.output_all_shot, exist_ok=True)
+        # self.output_true_shot = f"true_shot_frames_{self.video_name}"
+        # self.output_all_shot = f"all_shot_frames_{self.video_name}"
+        # os.makedirs(self.output_true_shot, exist_ok=True)
+        # os.makedirs(self.output_all_shot, exist_ok=True)
         
         self.cap = cv2.VideoCapture(video_path)
         self.frame_rate = self.cap.get(cv2.CAP_PROP_FPS)
@@ -83,7 +83,7 @@ class ShotDetector:
         self.width = int(self.cap.get(3))
         self.height = int(self.cap.get(4))
 
-        logger.log(INFO, f"Resolution: {self.width} X {self.height}")
+        logger.log(INFO, f"Input Resolution: {self.width} X {self.height}")
 
         self.makes = 0
         self.attempts = 0
@@ -123,7 +123,14 @@ class ShotDetector:
         self.save = env['save_video']
         Path(self.screen_shot_path).mkdir(parents=True, exist_ok=True)
 
+        self.inference_width = 640
+        self.inference_height = 640
 
+        if self.width > self.inference_width and self.height > self.inference_height:
+            self.inference_width = self.width
+            self.inference_height = self.height
+
+        logger.log(INFO, f"Inference Resolution: {self.inference_width} X {self.inference_height}")
 
         self.attempt_cooldown = 0
         self.timestamp = None
@@ -138,7 +145,7 @@ class ShotDetector:
 
         if self.save:
             os.makedirs(env['output_path'], exist_ok=True)
-            output_name = env['output_path'] + '/' + env['input'].split("/")[-1].split('.')[0] + str(datetime.now()) 
+            output_name = env['output_path'] + '/' + video_path.split("/")[-1].split('.')[0] + str(datetime.now()) 
             output_name = output_name.replace(':','-').replace('.','-') + ".mp4"
             logger.log(INFO, f"Saving results to: {output_name}")
             self.out = cv2.VideoWriter(output_name,  cv2.VideoWriter_fourcc(*'mp4v'), self.frame_rate, (self.output_width, self.output_height))
@@ -177,9 +184,9 @@ class ShotDetector:
             self.timestamp = self.cap.get(cv2.CAP_PROP_POS_MSEC)
 
             # resize to match - force 1280 and 720 for better model results
-            det_frame = cv2.resize(self.frame, (1280, 720))
+            det_frame = cv2.resize(self.frame, (self.inference_width, self.inference_height))
 
-            results = self.model(det_frame, stream=True, verbose=False, imgsz=1280)
+            results = self.model(det_frame, stream=True, verbose=False, imgsz=self.inference_width, device=env.get('device', 0))
 
             for r in results:
 
@@ -199,7 +206,7 @@ class ShotDetector:
                     x1, y1, x2, y2 = box[0]
 
                     # Scale back up to original dimensions
-                    x1, y1, x2, y2 = int(x1 * self.width/1280), int(y1 * self.height/720), int(x2 * self.width/1280), int(y2* self.height/720)
+                    x1, y1, x2, y2 = int(x1 * self.width/self.inference_width), int(y1 * self.height/self.inference_height), int(x2 * self.width/self.inference_width), int(y2* self.height/self.inference_height)
                     w, h = x2 - x1, y2 - y1
 
                     # Confidence
@@ -212,7 +219,7 @@ class ShotDetector:
 
                     center = (int(x1 + w / 2), int(y1 + h / 2))
 
-                    if (conf > 0.4 and current_class == 'rim' and not self.rim_detected) or (conf > 0.4 and current_class == 'ball' and not self.ball_detected):
+                    if (conf > 0.7 and current_class == 'rim' and not self.rim_detected) or (conf > 0.7 and current_class == 'ball' and not self.ball_detected):
 
                         if self.show_vid or self.save or self.screenshot:
                             self.draw_bounding_box(current_class, conf, cls, x1, y1, x2, y2)
@@ -326,16 +333,16 @@ class ShotDetector:
             cv2.circle(self.frame, self.ball_pos[i][0], 2, color, thickness)
 
         #draw lines between ball positions in consecutive frames
-        if len(self.ball_pos) > 1 and self.ball_detected:
-            if self.last_point_in_region:
-                x1, x2 = self.ball_pos[-1][0][0], self.ball_pos[-1][0][1]
-                y1, y2 = self.last_point_in_region[0][0], self.last_point_in_region[0][1]
+        # if len(self.ball_pos) > 1 and self.ball_detected:
+        #     if self.last_point_in_region:
+        #         x1, x2 = self.ball_pos[-1][0][0], self.ball_pos[-1][0][1]
+        #         y1, y2 = self.last_point_in_region[0][0], self.last_point_in_region[0][1]
 
-                pts = np.array([[x1, x2], [y1, y2]], np.int32)
+        #         pts = np.array([[x1, x2], [y1, y2]], np.int32)
         
-                pts = pts.reshape((-1, 1, 2))
+        #         pts = pts.reshape((-1, 1, 2))
 
-                cv2.polylines(self.frame, [pts], True, (0, 0, 255), 2)
+        #         cv2.polylines(self.frame, [pts], True, (0, 0, 255), 2)
 
         self.display_score()
 
@@ -356,7 +363,8 @@ class ShotDetector:
             
             # Made: Enters hoop region, shortly after enters down region, 
             # Attempt: Enters up region, then exits up region without entering hoop region
-            if self.ball_detected and self.attempt_cooldown == 0:
+            
+            if self.rim_detected and self.ball_detected and self.attempt_cooldown == 0:
                 if in_score_region(self.ball_pos, self.hoop_pos):
                     if self.ball_entered:
                         self.attempt_time += 1
@@ -419,6 +427,9 @@ class ShotDetector:
                 
 
                 else:
+                    if self.ball_entered:
+                        self.attempt_time += 1
+
                     if self.attempt_time >= self.ATTEMPT_DETECTION_INTERVAL:
                         time_string = get_time_string(self.timestamp)
                         self.overlay_color = (0, 0, 255)
@@ -453,10 +464,9 @@ class ShotDetector:
                         self.attempt_cooldown = self.MISS_ATTEMPT_COOLDOWN
                         self.screen_shot_moment = True
                         
-                    
-                    self.attempt_time = 0
-                    self.ball_entered = False
-                    self.last_point_in_region = None
+                        self.attempt_time = 0
+                        self.ball_entered = False
+                        self.last_point_in_region = None
     
 
     def display_score(self):
@@ -527,7 +537,7 @@ class ShotDetector:
             shoot_box = None
             person_boxes = []
             # Apply shoot detection model
-            results = self.model_shoot(frame_det_img, stream=True, verbose=False, imgsz=1280)
+            results = self.model_shoot(frame_det_img, stream=True, verbose=False, imgsz=self.inference_width, device=env.get('device', 0))
 
             for r in results:
                 boxes = sorted([(box.xyxy[0], box.conf, box.cls) for box in r.boxes], key=lambda x: -x[1])
@@ -545,7 +555,7 @@ class ShotDetector:
                     x1, y1, x2, y2 = box[0]
 
                     # Scale back up to original dimensions
-                    x1, y1, x2, y2 = int(x1 * self.width/1280), int(y1 * self.height/720), int(x2 * self.width/1280), int(y2* self.height/720)
+                    x1, y1, x2, y2 = int(x1 * self.width/self.inference_width), int(y1 * self.height/self.inference_height), int(x2 * self.width/self.inference_width), int(y2* self.height/self.inference_height)
                     w, h = x2 - x1, y2 - y1
                     center = (int(x1 + w / 2), int(y1 + h / 2))
 
@@ -569,9 +579,9 @@ class ShotDetector:
                             # print("shoot detected, being processed...")
                             shoot_box = box_info
                             # Save annotated frame as image if shoot detected for debugging
-                            annotated_frame = r.plot()
-                            frame_filename = os.path.join(self.output_all_shot, f"all_shot_{self.frame_count}_{get_time_string(self.timestamp)}.jpg")
-                            cv2.imwrite(frame_filename, annotated_frame)
+                            # annotated_frame = r.plot()
+                            # frame_filename = os.path.join(self.output_all_shot, f"all_shot_{self.frame_count}_{get_time_string(self.timestamp)}.jpg")
+                            # cv2.imwrite(frame_filename, annotated_frame)
                         
                         elif current_class == 'person':
                             person_boxes.append(box_info)                        
@@ -650,17 +660,17 @@ class ShotDetector:
                 shot_location = (avg_x, avg_y)
         
             # Plot shot location on debug frame if available
-            if shot_location:
-                # Convert coordinates to integers for cv2
-                plot_x = int(avg_x)
-                plot_y = int(avg_y)
+            # if shot_location:
+            #     # Convert coordinates to integers for cv2
+            #     plot_x = int(avg_x)
+            #     plot_y = int(avg_y)
                 
                 # Draw red circle at shot location
-                cv2.circle(debug_frame, (plot_x, plot_y), 5, (0,0,255), -1)
+                # cv2.circle(debug_frame, (plot_x, plot_y), 5, (0,0,255), -1)
                 
-                # Save the annotated frame
-                output_path = os.path.join(self.output_true_shot, f"true_shot_{debug_frame_count}_{debug_timestamp}.jpg")
-                cv2.imwrite(output_path, debug_frame)
+                # # Save the annotated frame
+                # output_path = os.path.join(self.output_true_shot, f"true_shot_{debug_frame_count}_{debug_timestamp}.jpg")
+                # cv2.imwrite(output_path, debug_frame)
         return shot_location, debug_timestamp
 
 def get_time_string(timestamp):

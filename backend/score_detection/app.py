@@ -152,11 +152,11 @@ def upload_video():
     video1_path = video2_path = None
 
     if video1:
-        video1_path = os.path.join(app.config['UPLOAD_FOLDER'], f'{run_id}_{video1.filename}')
+        video1_path = os.path.join(app.config['UPLOAD_FOLDER'], video1.filename)
         video1.save(video1_path)
     
     if video2:
-        video2_path = os.path.join(app.config['UPLOAD_FOLDER'], f'{run_id}_{video2.filename}')
+        video2_path = os.path.join(app.config['UPLOAD_FOLDER'], video2.filename)
         video2.save(video2_path)
 
      # Create MatchHandler

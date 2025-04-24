@@ -118,7 +118,7 @@ def in_score_region(ball_pos, hoop_pos):
 
     x1 = hoop_pos[-1][0][0] - 2 * hoop_pos[-1][2]
     x2 = hoop_pos[-1][0][0] + 2 * hoop_pos[-1][2]
-    y1 = hoop_pos[-1][0][1] - 3.5 * hoop_pos[-1][3]
+    y1 = hoop_pos[-1][0][1] - 5.5 * hoop_pos[-1][3]
     y2 = hoop_pos[-1][0][1] + 0.9 * hoop_pos[-1][3]
 
     return (x1 < x < x2 and y1 < y < y2)
@@ -203,30 +203,23 @@ def clean_hoop_pos(hoop_pos):
     return hoop_pos
 
 def detect_score(ball_pos, hoop_pos, last_pos):
-    #last item in ball_pos is the first ball position in down region
-    #up_pos is the last ball position in up region
-    #check if it crosses the hoop
-    # down_pos = ball_pos[-1][0]
-    # down_x, down_y = down_pos[0], down_pos[1]
-    # up_x, up_y = up_pos[0], up_pos[1]
-    # hoop_l, hoop_r = hoop_pos[-1][0][0] - 0.5 * hoop_pos[-1][2], hoop_pos[-1][0][0] + 0.5 * hoop_pos[-1][2]
-    # hoop_y = hoop_pos[-1][0][1]
-
-    # slope = (down_y - up_y) / (down_x - up_x)
-    # delta_y = hoop_y - up_y
-    # int_x = up_x + delta_y/slope
-
-    # print(hoop_l, int_x, hoop_r)
-
-    # return hoop_l < int_x < hoop_r
     if len(ball_pos) < 2:
         return False
+    
+    hoop_l = hoop_pos[-1][0][0] - 0.5 * hoop_pos[-1][2]
+    hoop_r = hoop_pos[-1][0][0] + 0.5 * hoop_pos[-1][2]
+    hoop_t = hoop_pos[-1][0][1] - 0.5 * hoop_pos[-1][3]
+    hoop_b = hoop_pos[-1][0][1] + 0.5 * hoop_pos[-1][3]
+
     
     pos2 = ball_pos[-1][0]
     pos1 = last_pos[0]
 
     x1, y1 = pos1[0], pos1[1]
     x2, y2 = pos2[0], pos2[1]
+
+    if hoop_l < x2 < hoop_r and hoop_t < y2 < hoop_b:
+        return True
 
     if x1 == x2 or y1 == y2:
          return False
