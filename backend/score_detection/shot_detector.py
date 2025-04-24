@@ -90,21 +90,8 @@ class ShotDetector:
         self.attempt_cooldown = 0
         self.attempt_time = 0
 
-        # Not needed, these will be handled in MatchHandler
 
         self.video_id = video_id
-        #TODO: modify init of data members
-        # self.is_match = kwargs.get('is_match', False)
-        # quarters = kwargs.get('quarter_timestamps', [])
-        # quarters = [i for i in quarters if i != '']
-        # is_switched = kwargs.get('is_switched', False)
-        # switch_time = kwargs.get('switch_time', '99:99:99')
-        
-        # TODO: modify scorecounter init
-        # if not self.is_match:
-        #     self.score_counter = ScoreCounter(quarters)
-        # else:
-        #     self.score_counter = MatchScoreCounter(quarters, is_switched, switch_time)
 
         # For marking if the ball / rim have been detected in the current frame
         self.ball_detected = False
@@ -261,13 +248,6 @@ class ShotDetector:
 
                 if self.save:
                     self.out.write(cv2.resize(self.frame, (env['output_width'], env['output_height'])))
-
-        # Report score and cleanup upon finish
-        # score_report = self.score_counter.report()
-        # for k,v in score_report.items():
-        #     logger.log(INFO, f"{k.ljust(16)} : {v}")
-        
-        # self.on_complete(score_report, self.is_match)
         
         # Wait for detection thread to finish
         if self.detection_thread and self.detection_thread.is_alive():
@@ -331,18 +311,6 @@ class ShotDetector:
             thickness = 5 if i == len(self.ball_pos)-1 else 2
                 
             cv2.circle(self.frame, self.ball_pos[i][0], 2, color, thickness)
-
-        #draw lines between ball positions in consecutive frames
-        # if len(self.ball_pos) > 1 and self.ball_detected:
-        #     if self.last_point_in_region:
-        #         x1, x2 = self.ball_pos[-1][0][0], self.ball_pos[-1][0][1]
-        #         y1, y2 = self.last_point_in_region[0][0], self.last_point_in_region[0][1]
-
-        #         pts = np.array([[x1, x2], [y1, y2]], np.int32)
-        
-        #         pts = pts.reshape((-1, 1, 2))
-
-        #         cv2.polylines(self.frame, [pts], True, (0, 0, 255), 2)
 
         self.display_score()
 
