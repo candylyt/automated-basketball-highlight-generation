@@ -44,8 +44,13 @@ function VideoUpload({
     setIsModalOpen(false);
 
     const formData = new FormData();
-    formData.append("video1", file1);
-    formData.append("video2", file2);
+    
+    // formData.append("video1", file1);
+    // formData.append("video2", file2);
+
+    // console.log("File 2:", file2.name);
+
+
     formData.append("isMatch", videoData.isMatch);
     formData.append("isSwitched", videoData.isSwitched);
     formData.append("switchTimestamp", videoData.formattedSwitchTimestamps);
@@ -54,6 +59,31 @@ function VideoUpload({
     formData.append("points2", videoData.points2);
     formData.append("imageDimensions1", videoData.imageDimensions1);
     formData.append("imageDimensions2", videoData.imageDimensions2);
+
+    const video1fileExists = file1 ? await checkFileExists(file1.name) : '';
+    const video2fileExists = file2 ? await checkFileExists(file2.name) : '';
+    
+    if (file1) {
+      if (!video1fileExists){
+        formData.append("video1", file1);
+        console.log("File 1 uploading:", file1.name);
+      } else {
+        console.log("File 1 already exists on the server:", file1.name);
+      }
+      formData.append("video1FileName", file1.name);
+    }
+
+    if (file2) {
+      if (!video2fileExists){
+        formData.append("video2", file2);
+        console.log("File 2 uploading:", file2.name);
+      } else {
+        console.log("File 2 already exists on the server:", file2.name);
+      }
+      formData.append("video2FileName", file2.name);
+    }
+
+
 
     try {
       
@@ -121,6 +151,19 @@ function VideoUpload({
       />
     </div>
   );
+}
+
+async function checkFileExists(filename) {
+  const response = await fetch(`${backendPort}/check_file`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ filename }),
+  });
+
+  const data = await response.json();
+  return data.exists;
 }
 
 export default VideoUpload;

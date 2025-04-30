@@ -129,14 +129,14 @@ def upload_video():
 
     video1 = request.files.get('video1')
     video2 = request.files.get('video2')
+    video1_name = request.form.get('video1FileName')
+    video2_name = request.form.get('video2FileName')
 
     points1 = request.form.get('points1')
     points2 = request.form.get('points2')
 
     image_dimensions1 = request.form.get('imageDimensions1')
     image_dimensions2 = request.form.get('imageDimensions2')
-
-    
 
     logger.log(INFO, request.form)
     
@@ -151,13 +151,15 @@ def upload_video():
     
     video1_path = video2_path = None
 
-    if video1:
-        video1_path = os.path.join(app.config['UPLOAD_FOLDER'], video1.filename)
-        video1.save(video1_path)
+    if video1_name:
+        video1_path = os.path.join(app.config['UPLOAD_FOLDER'], video1_name)
+        if video1:
+            video1.save(video1_path)
     
-    if video2:
-        video2_path = os.path.join(app.config['UPLOAD_FOLDER'], video2.filename)
-        video2.save(video2_path)
+    if video2_name:
+        video2_path = os.path.join(app.config['UPLOAD_FOLDER'], video2_name)
+        if video2:
+            video2.save(video2_path)
 
      # Create MatchHandler
     handler = MatchHandler(
@@ -220,6 +222,24 @@ def generate_report():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+@app.route('/check_file', methods=['POST'])
+def check_file():
+    """Check if a file with the given name exists on the server."""
+    data = request.json
+    filename = data.get('filename')
+
+    if not filename:
+        return jsonify({'error': 'Filename is required'}), 400
+
+    # Sanitize filename to prevent directory traversal
+    sanitized_filename = os.path.basename(filename)
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], sanitized_filename)
+
+    if os.path.exists(file_path):
+        return jsonify({'exists': True})
+    else:
+        return jsonify({'exists': False})
 
 
 if __name__ == "__main__":
