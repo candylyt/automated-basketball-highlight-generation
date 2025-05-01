@@ -28,6 +28,7 @@ from score_counter import (
     MatchScoreCounter
 )
 
+
 from logger import (
     INFO,
     SOCKET,
@@ -110,18 +111,19 @@ class ShotDetector:
         self.save = env['save_video']
         Path(self.screen_shot_path).mkdir(parents=True, exist_ok=True)
 
-        self.inference_width = 640
-        self.inference_height = 640
+        self.inference_width = ((self.width + 31) // 32) * 32
+        self.inference_height = ((self.height + 31) // 32) * 32
 
-        if self.width > self.inference_width and self.height > self.inference_height:
-            self.inference_width = self.width
-            self.inference_height = self.height
+        # if self.width > self.inference_width and self.height > self.inference_height:
+        #     self.inference_width = self.width
+        #     self.inference_height = self.height
 
         logger.log(INFO, f"Inference Resolution: {self.inference_width} X {self.inference_height}")
 
         self.attempt_cooldown = 0
         self.timestamp = None
         self.ball_entered = False
+        self.rim_last_detected = -1
 
         self.MISS_ATTEMPT_COOLDOWN = int(self.frame_rate * 2.5)
         self.MADE_ATTEMPT_COOLDOWN = int(self.frame_rate * 3)
@@ -213,6 +215,7 @@ class ShotDetector:
                         
                         if current_class == 'rim':
                             self.rim_detected = True
+                            self.rim_last_detected = self.frame_count
                             self.hoop_pos.append((center, self.frame_count, w, h, conf))
                         elif current_class == 'ball':
                             self.ball_detected = True
@@ -332,7 +335,7 @@ class ShotDetector:
             # Made: Enters hoop region, shortly after enters down region, 
             # Attempt: Enters up region, then exits up region without entering hoop region
             
-            if self.rim_detected and self.ball_detected and self.attempt_cooldown == 0:
+            if self.frame_count - self.rim_last_detected < self.frame_rate and self.ball_detected and self.attempt_cooldown == 0:
                 if in_score_region(self.ball_pos, self.hoop_pos):
                     if self.ball_entered:
                         self.attempt_time += 1
