@@ -553,11 +553,12 @@ class ShotDetector:
                             annotated_frame = r.plot()
                             frame_filename = os.path.join(self.output_all_shot, f"all_shot_{self.frame_count}_{get_time_string(self.timestamp)}.jpg")
                             cv2.imwrite(frame_filename, annotated_frame)
+                            # logger.log(INFO, f"shoot box recorded? {shoot_box} at {get_time_string(self.timestamp)}")
                         
                         elif current_class == 'person':
                             person_boxes.append(box_info)                        
-            
-            
+            # if shoot_box:
+            #     logger.log(INFO, f"hv shoot box? {shoot_box and 1}")
             if shoot_box and person_boxes:
                 # Step 2: Find nearest person to the shoot box by calculating overlap    
                 max_overlap = 0
@@ -590,11 +591,14 @@ class ShotDetector:
                 
                 # Calculate shoot box area
                 shoot_box_area = (x2_shoot - x1_shoot) * (y2_shoot - y1_shoot)
+                # logger.log(INFO, f"hv cloest person? {closest_person}")
+                # logger.log(INFO, f"hv enough overlap? {max_overlap >= 0.7 * shoot_box_area}")
                 if closest_person and max_overlap >= 0.7 * shoot_box_area:
                     x1, y1, x2, y2 = closest_person['coords']
                     bottom_center_x = x1 + (x2 - x1) // 2  # Center x coordinate
                     bottom_center_y = y2  # Bottom y coordinate
                     shooter_positions.append((bottom_center_x, bottom_center_y))
+                    # logger.log(INFO, f"frame being added into shooter_positions")
                     # Mark the first frame with shoot box as the starting point of shooting, for debugging purpose
                     if not debug_timestamp:
                         debug_timestamp = get_time_string(timestamp)
@@ -603,6 +607,7 @@ class ShotDetector:
 
         # Step 3: Use IQR to filter outliers after all 120 frames is processed and recorded
         if shooter_positions:
+            # logger.log(INFO, f"enter shooter_positions")
             x_coords = [pos[0] for pos in shooter_positions]
             y_coords = [pos[1] for pos in shooter_positions]
             
@@ -625,6 +630,7 @@ class ShotDetector:
             ]
             
             if filtered_positions:
+                # logger.log(INFO, f"enter filtered_position")
                 # Calculate average position
                 avg_x = sum(pos[0] for pos in filtered_positions) / len(filtered_positions)
                 avg_y = sum(pos[1] for pos in filtered_positions) / len(filtered_positions)

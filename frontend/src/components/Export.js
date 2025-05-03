@@ -124,8 +124,8 @@ const Export = ({ timestamps, video, isMatch, runId }) => {
       ffmpeg.deleteFile(`clip-${index}.mp4`);
     });
     ffmpeg.deleteFile("concat_list.txt");
-    ffmpeg.deleteFile("video1.mp4");
-    ffmpeg.deleteFile("video2.mp4");
+    // ffmpeg.deleteFile("video1.mp4");
+    // ffmpeg.deleteFile("video2.mp4");
 
     setProcessing(false);
   };
