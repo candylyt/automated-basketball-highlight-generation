@@ -1,6 +1,10 @@
 # 🏀 HoopIQ: Real-Time Basketball Analytics & Highlight Generator 🎥
 #### Welcome to HoopIQ, your personal basketball analyst and highlight reel wizard! Whether you're an amateur baller looking to up your game or a content creator who wants to turn game footage into jaw-dropping highlights in record time, HoopIQ has got your back. No more waiting for professional analysts or spending hours editing—HoopIQ brings the pros to your pocket!
 
+## 🎥 Demo
+
+[![Watch the Demo](assets/demo-thumbnail.png)](https://youtu.be/Lh9C1Lzz7Jo)
+
 ## 🚀 What is HoopIQ?
 HoopIQ is a real-time basketball analytics tool that identifies scoring moments, shooting attempts, and other key events during a game. It automatically generates statistics and highlight reels so you can focus on what really matters: balling out and improving your game.
 
